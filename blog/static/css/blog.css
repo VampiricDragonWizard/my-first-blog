@@ -5,16 +5,26 @@ h1 a, h2 a {
 }
 h1 {
   font-size: 36pt;
+  color: navy;
+  font-family: 'Lobster', cursive;
+}
+h2 {
+color: navy;
+font-family: 'Lobster';
 }
 body {
   padding-left: 15px;
   background-color: AntiqueWhite;
+  font-size: 12pt;
+}
+legend {
+  font-size: 16pt;
 }
 .page-header {
     background-color: #ff8833;
     margin-top: 0;
     margin-bottom: 40px;
-    padding: 20px 20px 20px 40px;
+    padding: 20px 20px 40px 40px;
 }
 
 .date {
@@ -34,10 +44,12 @@ body {
 .top-menu,
 .top-menu:hover,
 .top-menu:visited {
-    color: #ffffff;
+    color: navy;
     float: right;
-    font-size: 26pt;
+    font-size: 24pt;
     margin-right: 20px;
+    text-decoration: none;
+    font-family: 'Lobster', cursive;
 }
 
 .post {
@@ -65,3 +77,20 @@ body {
     color: #FFFFFF;
     background-color: #C25100;
 }
+.error-message {
+  color: red;
+}
+td {
+  height: 80px;
+  width: 120px;
+}
+input.ability-score {
+  width: 40%;
+  height: 32px;
+  font-size: 18px;
+}
+input.ability-score[readonly] {
+  background-color: lightgrey;
+  color: grey;
+}
+

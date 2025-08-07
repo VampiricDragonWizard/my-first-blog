@@ -2,18 +2,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Django Girls blog</title>
+    <title>Vampiric Dragon Wizard's blog</title>
     <!-- style sheet links -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext">
     <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+    <script src="https://unpkg.com/vue@3.4.9/dist/vue.global.js"></script>
+    <script src="{% static 'vue/app.js' %}"></script>
   </head>
   <body>
     <header class="page-header">
       <div class="container">
-        <h1><a href="/">Django Girls Blog</a></h1>
+        <h1><a href="/">Blog</a></h1>
         {% if user.is_authenticated %}
-          <a href="{% url 'post_new' %}" class="top-menu">New Post</a>
+          <a href="{% url 'post_new' %}" class="top-menu">{% include './icons/bootstrap-icons-1.11.3/file-earmark-plus-fill.svg' %}</a>
         {% endif %}
+        <a href="{% url 'monster_builder' %}" class="top-menu">Monster Builder</a>
       </div>
     </header>
     <main class="container">
@@ -25,5 +28,8 @@
       </div>
     </main>
   </body>
+  <footer>
+    <!--a href="https://www.flaticon.com/free-icons/dragon" title="monster icons">Dragon icon created by cube29 - Flaticon</a-->
+  </footer>
 </html>
 

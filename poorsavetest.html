@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+<input type="number" id="level">
+<button onclick="calculateSave">Calculate</button>
+<p id="save"></p>
+<script>
+function calculateSave() {
+console.log("Running calculateSave...");
+let hd = document.getElementById("level").value;
+console.log(hd);
+let result = Math.floor((hd-1)/3);
+console.log(result);
+document.getElementById("save").innerHTML = result;
+}
+</script>
+</body>
+</html>

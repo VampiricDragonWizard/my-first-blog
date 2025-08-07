@@ -1,0 +1,247 @@
+{% extends 'blog/base.html' %}
+{% load statblockfilters %}
+{% block headerscript %}
+    function addSkill() {
+        let skillname = document.forms["skillForm"]["skillname"].value;
+        let ranks = document.forms["skillForm"]["ranks"].value;
+        alert("Adding a skill");
+        let oldlist = document.getElementById("skilllist").innerHTML;
+        document.getElementById("skilllist").innerHTML = oldlist + "<li>" + skillname + ": " + ranks + "</li>";
+    }
+    function makeMonster() {
+        let monstername = document.forms["monsterForm"]["name"].value;
+        let monstertype = document.forms["monsterForm"]["monstertype"].value;
+        let size = document.forms["monsterForm"]["size"].value;
+        let monstertype = document.forms["monsterForm"]["monstertype"].value;
+        let hd_number = document.forms["monsterForm"]["name"].value;
+        document.getElementById("name").innerHTML = "Monster: " + monstername;
+        document.getElementById("type").innerHTML = monstertype;
+        document.getElementById("size").innerHTML = monstertype;
+
+    }
+{% endblock %}
+{% block content %} 
+<h1>Monster Builder</h1>
+<form name="monsterForm">
+  <label for="name">Name</label>
+  <input type="text" name="name" value="" maxlength="60">
+  <br>
+  <button onclick="makeMonster()">Reload</button>
+    <h2>Basics</h2>
+    <label for="monstertype">Type</label>
+    <select name="monstertype">
+        <!-- Add way to keep selected type selected -->
+        <option selected disabled id="type">Type</option>
+        <option value="aberration">Aberration</option>
+        <option value="animal">Animal</option>
+        <option value="construct">Construct</option>
+        <option value="dragon">Dragon</option>
+        <option value="elemental">Elemental</option>
+        <option value="fey">Fey</option>
+        <option value="giant">Giant</option>
+        <option value="humanoid">Humanoid</option>
+        <option value="magical beast">Magical Beast</option>
+        <option value="monstrous humanoid">Monstrous Humanoid</option>
+        <option value="ooze">Ooze</option>
+        <option value="outsider">Outsider</option>
+        <option value="undead">Undead</option>
+    </select>
+    <br>
+    <label for="size">Size</label>
+    <select name="size" id="sizeselector">
+      <option value="fine">Fine</option>
+      <option value="diminutive">Diminutive</option>
+      <option value="tiny">Tiny</option>
+      <option value="small">Small</option>
+      <option value="medium" selected>Medium</option>
+      <option value="large">Large</option>
+      <option value="huge">Huge</option>
+      <option value="gargantuan">Gargantuan</option>
+      <option value="colossal">Colossal</option>
+    </select>
+    <br>
+    <label for="hd_number">Hit Dice</label>
+    <label for="hd_numberisfracture">Fracture</label>
+    <input type="checkbox" name="hd_numberisfracture">
+    <input type="number" name="hd_number" min="0">
+    <h2>Speed</h2>
+    <label for="speed">speed</label>
+    <input type="number" min="0" name="speed" value="{{ speed }}">
+    <label for="burrow_speed">burrow</label>
+    <input type="number" min="0" name="burrow_speed" value="{{ burrow_speed }}">
+    <label for="climb_speed">climb</label>
+    <input type="number" min="0" name="climb_speed" value="{{ climb_speed }}">
+    <label for="fly_speed">fly</label>
+    <input type="number" min="0" name="fly_speed" value="{{ fly_speed }}">
+    <label for="fly_quality">quality</label>
+    <select name="fly_quality"></select>
+    <label for="swim_speed">swim</label>
+    <input type="number" min="0" name="swim_speed" value="{{ swim_speed }}">
+  {% if monstertype != None %}
+    <h2>Ability Scores and Saves</h2>
+      <!-- Ability Scores, fill in after selecting type and subtype -->
+	    <!-- Option for non-existant score -->
+	    <table>
+	      <tr>
+	        <td>
+	          <label for="strength">Strength</label>
+	          <br>
+	          <input type="number"name="strength" min="0" value=""">
+	        </td>
+	        <td>
+	          <label for="dexterity">Dexterity</label>
+	          <br>
+	          <input type="number"name="dexterity" min="0" value="">
+	        </td>
+	        <td>
+	          <label for="constitution">Constitution</label>
+	          <br>
+	    	    {% if monstertype.name == "construct" or monstertype.name == "undead" %}
+		          <input name="constitution" value="-" readonly>
+	          {% else %}
+	            <input type="number"name="constitution" min="0" value="">
+	          {% endif %}
+	        </td>
+	      </tr>
+	      <tr>
+	    	  <td>
+	          <label for="intelligence">Intelligence</label>
+	          <br>
+	          {% if  monstertype.name == "ooze" or monstertype.name == "vermin" %}
+		          <input name="intelligence" value="-" readonly>
+	          {% else %}
+	            <input type="number"name="intelligence" min="0"
+	              {% if monstertype.name == "animal" %}
+	              max="2"
+	              {% if abilityscores.intelligence.0 < 2 %} value="{{ abilityscores.intelligence.0 }}" {% endif %}
+	              {% else %} value="{{ abilityscores.intelligence.0 }}"{% endif %}>
+	          {% endif %}
+	        </td>
+	    	  <td>
+	          <label for="wisdom">Wisdom</label>
+	          <br>
+	          <input type="number"name="wisdom" value="{{ abilityscores.wisdom.0 }}">
+	        </td>
+	    	  <td>
+	          <label for="charisma">Charisma</label>
+	          <br>
+	          <input type="number"name="charisma" value="{{ abilityscores.charisma.0 }}">
+	        </td>
+	      </tr>
+	      <tr>
+	        <td>
+	          <label for="fortitude">Fortitude</label>
+	          <br>
+	          <input type="radio" name="fortitude" value="good"><label for="good">Good</label>
+            <input type="radio" name="fortitude" value="poor"><label for="poor">Poor</label>
+            <br>{{ fortitude_quality }}
+	        </td>
+	        <td>
+	          <label for="reflex">Reflex</label>
+		        <br>
+	          <input type="radio" name="reflex" value="good"><label for="good">Good</label>
+	          <input type="radio" name="reflex" value="poor"><label for="poor">Poor</label>
+	          <br>{{ reflex_quality }}
+	        </td>
+	        <td>
+	          <label for="will">Will</label>
+	          <br>
+	          <input type="radio" name="will" value="good"><label for="good">Good</label>
+            <input type="radio" name="will" value="poor"><label for="poor">Poor</label>
+            <br>{{ will_quality }}
+	        </td>
+	      </tr>
+	    </table>
+	{% endif %}
+  {% if skillpoints %}
+      <h2>Skills and Natural Tendencies</h2>
+      <!-- Skills, fill in after skill points are know. They can be calculated after selecting type,
+      and maybe HD_number and Intelligence -->
+      Skill Points: {% if monstertype.name == "animal" or monstertype.name == "vermin" %}
+      {{ skillpoints.0 }}-{{ skillpoints.1 }}{% else %}{{ skillpoints }}{% endif %}<br>
+      Max number of skill ranks: {{ hd_number|add:"3" }}
+      <br>
+      <!-- way to add skills to monster -->
+      <select name="skillname">
+        {% for skill in skills %}
+          <option value="{{ skill.name }}">{{ skill.name|title }}</option>
+        {% endfor %}
+      </select>
+      <label for="naturaltendency">Natural Tendency</label>
+      <input type="checkbox" name="naturaltendency">
+      <br>
+      <input type="number" name="ranks">
+      <button onclick="addSkill()">Add</button>
+      <ul id="skilllist"></ul>
+  {% endif %}
+</form>
+
+<aside>
+<!-- Monster Stat Block -->
+  <div>
+    <h2 id="name">Monster: </h2>
+    <table>
+      <tr>
+        <th>Type</th>
+        <td id="type"></td>
+      </tr>
+      <tr>
+        <th>Size</th>
+        <td id="size"></td>
+      </tr>
+      <tr>
+        <th>HD</th>
+        <td>{{ hd_number }}d{{ monstertype.hd_type }}{{ constitution.1|add_modifier_sign }} ({{ hp }})</td>
+      </tr>
+      <tr>
+        <th>STR</th>
+        <td>{{ abilityscores.strength.0 }} ({{ abilityscores.strength.1|add_modifier_sign }})</td>
+      </tr>
+      <tr>
+        <th>DEX</th>
+        <td>{{ abilityscores.dexterity.0 }} ({{ abilityscores.dexterity.1|add_modifier_sign }})</td>
+      </tr>
+      <tr>
+        <th>CON</th>
+        <td>{{ abilityscores.constitution.0 }} ({{ abilityscores.constitution.1|add_modifier_sign }})</td>
+      </tr>
+      <tr>
+        <th>INT</th>
+        <td>{{ abilityscores.intelligence.0 }} ({{ abilityscores.intelligence.1|add_modifier_sign }})</td>
+      </tr>
+      <tr>
+        <th>WIS</th>
+        <td>{{ abilityscores.wisdom.0 }} ({{ abilityscores.wisdom.1|add_modifier_sign }})</td>
+      </tr>
+      <tr>
+        <th>CHA</th>
+        <td>{{ abilityscores.charisma.0 }} ({{ abilityscores.charisma.1|add_modifier_sign }})</td>
+      </tr>
+      <tr>
+        <th>Fortitude</th>
+        <td>{{ fortitude|add_modifier_sign }}</td>
+      </tr>
+      <tr>
+        <th>Reflex</th>
+        <td>{{ reflex|add_modifier_sign }}</td>
+      </tr>
+      <tr>
+        <th>Will</th>
+        <td>{{ will|add_modifier_sign }}</td>
+      </tr>
+      <tr>
+        <th>Speed</th>
+        <td>{{ speed }} ft.
+        {% if burrow_speed > 0 %}, burrow {{ burrow_speed }} ft.{% endif %}
+        {% if climb_speed > 0 %}, climb {{ climb_speed }} ft.{% endif %}
+        {% if fly_speed.0 > 0 %}, fly {{ fly_speed.0 }} ft. ({{ fly_speed.1 }}){% endif %}
+        {% if swim_speed > 0 %}, swim {{ swim_speed }} ft.{% endif %}</td>
+      </tr>
+      <tr>
+        <th>Skills</th>
+        <td></td>
+      </tr>
+    </table>
+  </div>
+</aside>
+{% endblock %}

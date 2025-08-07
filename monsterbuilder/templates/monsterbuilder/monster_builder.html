@@ -1,0 +1,232 @@
+{% extends 'blog/base.html' %}
+  
+{% scriptblock %}
+<script>
+  function addSkill() {
+  let skillname = document.forms["skillForm"]["skillname"].value;
+  let ranks = document.forms["skillForm"]["ranks"].value;
+  let oldlist = document.getElementById("skilllist").innerHTML;
+  document.getElementById("skilllist").innerHTML = oldlist + "<li>" + skillname + ": " + ranks + "</li>";
+  }
+  </script>
+{% endblock %}
+
+{% contentblock %}
+<h1>Monster Builder</h1>
+<form name="mainForm" action="monster_builder/" method="POST">
+  <label for="name">Name</label>
+  <input type="text" name="name" value="{{ monster.name }}" maxlength="60">
+  <fieldset>
+    <label for="type">Type</label>
+    <select name="type">
+      <option value="none" selected>Type</option>
+      <option value="aberration">Aberration</option>
+      <option value="animal">Animal</option>
+      <option value="construct">Construct</option>
+      <option value="dragon">Dragon</option>
+      <option value="elemental">Elemental</option>
+      <option value="fey">Fey</option>
+      <option value="giant">Giant</option>
+      <option value="humanoid">Humanoid</option>
+      <option value="magical_beast">Magical Beast</option>
+      <option value="monstrous_humanoid">Monstrous Humanoid</option>
+      <option value="ooze">Ooze</option>
+      <option value="outsider">Outsider</option>
+      <option value="undead">Undead</option>
+    </select>
+
+    <label for="subtype">Subtype</label>
+    <select name="subtype" multiple>
+      <option value="">None</option>
+      <option value="air">Air</option>
+      <option value="angel">Angel</option>
+      <option value="aquatic">Aquatic</option>
+      <option value="archon">Archon</option>
+      <option value="augmented">Augmented</option>
+      <option value="chaotic">Chaotic</option>
+      <option value="cold">Cold</option>
+      <option value="earth">Earth</option>
+      <option value="evil">Evil</option>
+      <option value="extraplanar">Extraplanar</option>
+      <option value="fire">Fire</option>
+      <option value="goblinoid">Goblinoid</option>
+      <option value="good">Good</option>
+      <option value="incorporeal">Incorporeal</option>
+      <option value="lawful">Lawful</option>
+      <option value="native">Native</option>
+      <option value="reptilian">Reptilian</option>
+      <option value="shapechanger">Shapechanger</option>
+      <option value="swarm">Swarm</option>
+      <option value="water">Water</option>
+    </select>
+    <br>
+    <label for="HD_number">Hit Dice</label>
+    <input type="number" name="HD_number" value="{{ monster.HD_number }}" min="0">
+  
+    <label for="size">Size</label>
+    <select name="size" value="{{ monster.size }}">
+      <option value="8">Fine</option>
+      <option value="4">Diminutive</option>
+      <option value="2">Tiny</option>
+      <option value="1">Small</option>
+      <option value="0" selected>Medium</option>
+      <option value="-1">Large</option>
+      <option value="-2">Huge</option>
+      <option value="-4">Gargantuan</option>
+      <option value="-8">Colossal</option>
+    </select>
+
+<fieldset>
+  <legend>Ability Scores</legend>
+  <!-- Ability Scores, fill in after selecting type and subtype -->
+	<!-- Option for non-existant score -->
+	<table>
+	  <tr>
+	    <td>
+	      <label for="str">Strength</label>
+	      <br>
+	      <input type="number"name="str" min="0">
+	    </td>
+	    <td>
+	      <label for="dex">Dexterity</label>
+	      <br>
+	      <input type="number"name="dex" min="0">
+	    </td>
+	    <td>
+	      <label for="con">Constitution</label>
+	      <br>
+	  	  {% if monster.type == "construct" or monster.type == "undead" %}
+		      <input name="con" value="-" readonly>
+	      {% else %}
+	        <input type="number"name="con" min="0">
+	      {% endif %}
+	    </td>
+	  </tr>
+	  <tr>
+	  	<td>
+	      <label for="int">Intelligence</label>
+	      <br>
+	      {% if  monster.type == "ooze" or monster.type == "vermin" %}
+		      <input name="int" value="-" readonly>
+	      {% elif monster.type == "animal" %}
+	        <input type="number"name="int" min="0" max="2">
+	      {% else %}
+	        <input type="number"name="int" min="0">
+	      {% endif %}
+	    </td>
+	  	<td>
+	      <label for="wis">Wisdom</label>
+	      <br>
+	      <input type="number"name="wis">
+	    </td>
+	  	<td>
+	      <label for="cha">Charisma</label>
+	      <br>
+	      <input type="number"name="cha">
+	    </td>
+	  </tr>
+	</table>
+</fieldset>
+<fieldset>
+  <legend>Saves</legend>
+  <table>
+    <tr>
+      <td>
+	      <label>Fortitude</label>
+	      <br>
+	      <input type="radio" name="fortitude" value="good"><label for="good">Good</label>
+        <input type="radio" name="fortitude" value="poor"><label for="poor">Poor</label>
+	    </td>
+	    <td>
+	      <label>Reflex</label>
+	      <br>
+	      <input type="radio" name="reflex" value="good"><label for="good">Good</label>
+	      <input type="radio" name="reflex" value="poor"><label for="poor">Poor</label>
+	    </td>
+	    <td>
+	      <label>Will</label>
+	      <br>
+	      <input type="radio" name="will" value="good"><label for="good">Good</label>
+        <input type="radio" name="will" value="poor"><label for="poor">Poor</label>
+	    </td>
+	  </tr>
+  </table>
+</fieldset>
+</form>
+<fieldset form="mainForm">
+  <legend>Armor</legend>
+  <label for="naturalarmor">Natural armor</label>
+  <input name="naturalarmor" type="number" min="0">
+  <label for="manufacturedarmor">Armor worn</label>
+  <select name="manufacturedarmor">
+      <optgroup label="light">
+      {% for x in light_armor %}
+        <option value="{{ x.name }}">{{ x.name }} (+{{ x.armor_bonus }})</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Medium">
+      {% for x in medium_armor %}
+        <option value="{{ x.name }}">{{ x.name }} (+{{ x.armor_bonus }})</option>
+      {% endfor %}
+    </optgroup>
+    <optgroup label="Heavy">
+      {% for x in heavy_armor %}
+        <option value="{{ x.name }}">{{ x.name }} (+{{ x.armor_bonus }})</option>
+      {% endfor %}
+    </optgroup>
+  </select>
+  <label for="shield">Shield</label>
+  <select name="shield">
+    {% for x in shield %}
+      <option value="{{ x.name }}">{{ x.name }} (+{{ x.armor_bonus }})</option>
+    {% endfor %}
+  </select>
+</fieldset>
+<fieldset>
+  <legend>Attacks</legend>
+  <form name="attackForm">
+    <input type="text" name="attackname">
+    <input type=" <!-- TODO -->>
+  </form>
+  <button onclick="addAttack()">Add</button>
+  <ul id="attacklist">
+  </ul>
+</fieldset>
+<fieldset>
+  <legend>Skills and Natural Tendencies</legend>
+  <!-- Skills, fill in after selecting type, HD_number, and Intelligence -->
+  Skill Points: {{ monster.skillpoints }}
+  Max number of skill ranks: {{ monster.HD_number|3 }}
+  <br>
+  <!-- way to add skills to monster -->
+  <form name="skillForm">
+  <!--
+    <select name="skillname">
+      <option value="skill">Skill</option>
+    </select>
+  -->
+    <input type="text" name="skillname">
+    <input type="number" name="ranks">
+  </form>
+  <button onclick="addSkill()">Add</button>
+  <ul id="skilllist">
+  </ul>
+</fieldset>
+
+  <!-- Natural Tendencies and Bonus Feats -->
+  <!-- Feats, fill in after selecting HD_number -->
+  <!-- Alignment -->
+  <!-- Treasure Type -->
+  <!-- Other information like Environment, Organization, Advancement and Challenge Rating -->
+<fieldset>
+  <legend>Type of Stat Block</legend>
+  <input type="radio" name="statblock" value="d20srd_stat.html"><label><a href="https://www.d20srd.org/srd/monsters/intro.htm">d20srd</a></label>
+  <input type="radio" name="statblock" value="alexandrian_stat.html"><label><a href="https://thealexandrian.net/wordpress/979/roleplaying-games/revised-3-5-stat-blocks">The Alexandrian</a></label>
+</fieldset>
+  <button type="submit">Reload</button>
+</form>
+<aside>
+<!-- Monster Stat Block -->
+<!-- {% include selected statblock %} -->
+</aside>
+{% endblock %}

@@ -1,0 +1,711 @@
+{% extends 'blog/base.html' %}
+{% load statblockfilters %}
+{% block headerscript %}
+{% endblock %}
+{% block content %}
+<!-- TODO: add reach -->
+<div id="app">
+<h1>Monster Builder V4</h1>
+<form method="POST" name="monsterForm" action="/monsterbuilder/">
+{% csrf_token %}
+  <label for="name">Name</label>
+  <input type="text" id="name" name="monster_name" maxlength="60" id="name"  v-model="monsterName">
+  <br>
+  {% if user.is_authenticated %}
+  <button type="submit" name="action_button" value="save">Save</button>
+  {% endif %}
+  <button type="submit" name="action_button" value="show">Show Statblock</button>
+  <fieldset name="basics">
+    <legend>Basics</legend>
+    <label for="monstertype">Type</label>
+    <select id="monstertype" name="monstertype" v-model="monsterType" @change.prevent="assignType">
+        <!-- TODO: Add way to keep selected type selected -->
+        <option value="" selected disabled>Select Type</option>
+        {% for monstertype in monstertypes %}
+          <option value="{{ monstertype.name }}">{{ monstertype.name|title }}</option>
+        {% endfor %}
+    </select>
+    <br>
+    {%  comment %} <!--TODO: subtypes
+    <label for="subtypes">Subtypes</label>
+    <select id="subtypes" name="subtypes" v-model="subtypes" @change.prevent="assignSubtype" onmouseover="this.setAttribute('size', '6')" onmouseout="this.setAttribute('size', '1')" size="1"  multiple>
+      {% for subtype in subtypes %}
+        <option value="{{ subtype.name }}">{{ subtype.name|title }}</option>
+      {% endfor %}
+    </select>
+    -->{%  endcomment %}
+    <br>
+    <label for="size">Size</label>
+    <select id="size" name="size" v-model="monsterSize">
+        <option value="fine">Fine</option>
+        <option value="diminutive">Diminutive</option>
+        <option value="tiny">Tiny</option>
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+        <option value="huge">Huge</option>
+        <option value="gargantuan">Gargantuan</option>
+        <option value="colossal">Colossal</option>
+    </select>
+    <br>
+    <label for="hd_number">Hit Dice</label>
+    <label for="hd_fraction">Click if the number of Hit Dice is a fraction. Then enter the denominator.</label>
+    <input type="checkbox" id="hd_fraction" name="hd_fraction" v-model="hdFraction">
+    <input type="number" id="hd_number" name="hd_number" min="0" v-model="hdNumber">
+    HD: {% verbatim %}{{ hitDice }}
+    <br>
+    Initiative: {{ initiativeModifier }}{% endverbatim %}
+  </fieldset>
+  <fieldset name="speed">
+      <legend>Speed</legend>
+            <label for="speed">speed</label>
+            <input type="number" id="speed" name="speed" min="0" value="0">
+            <label for="burrow_speed">burrow</label>
+            <input type="number" id="burrow_speed" name="burrow_speed" min="0" value="0">
+            <label for="climb_speed">climb</label>
+            <input type="number" id="climb_speed" name="climb_speed" min="0" v-model="climbSpeed">
+            <label for="fly_speed">fly</label>
+            <input type="number" id="fly_speed" name="fly_speed" min="0" v-model="flySpeed">
+            <label for="fly_maneuverability" v-show="flySpeed>0">Maneuverability</label>
+            <select  id="fly_maneuverability" name="fly_maneuverability" v-show="flySpeed>0">
+              <option selected disabled>Maneuverability</option>
+              <option value="perfect">Perfect</option>
+              <option value="good">Good</option>
+              <option value="average">Average</option>
+              <option value="poor">Poor</option>
+              <option value="clumsy">Clumsy</option>
+            </select>
+            <label for="swim_speed">swim</label>
+            <input type="number" id="swim_speed" name="swim_speed" min="0" v-model="swimSpeed">
+            <!-- TODO: space and reach -->
+  </fieldset>
+  <fieldset name="scores">
+      <legend>Ability Scores and Saves</legend>
+      <!-- TODO: Option for non-existant score -->
+      {% verbatim %}
+      <table>
+        <tr>
+          <td>
+            <label for="strength">Strength</label><br>
+            <input type="number" id="strength" name="strength" min="0" v-model="strengthScore">
+             ({{ strengthModifier }})
+          </td>
+          <td>
+            <label for="dexterity">Dexterity</label><br>
+            <input type="number" id="dexterity" name="dexterity" min="0" v-model="dexterityScore">
+             ({{ dexterityModifier }})<sup v-if="maxDexBonus">Max. DEX bonus</sup>
+          </td>
+	      <td>
+	        <label for="constitution">Constitution</label><br>
+              <!-- constructs and undead do no have constitution scores -->
+              <!-- Hide if construct or undead (so form can still take value), but just show - to user? -->
+            <input v-if="monsterType==='construct' || monsterType==='undead'" type="number" id="constitution"
+                    name="constitution" readonly v-model="constitutionScore"
+                    title="Constructs and undead are not alive and therefore have no constitution scores">
+            <input v-else type="number" id="constitution" name="constitution" min="0" v-model="constitutionScore">
+             ({{ constitutionModifier }})
+	      </td>
+      </tr>
+	    <tr>
+        <td>
+	        <label for="intelligence">Intelligence</label><br>
+              <!-- vermin and oozes do not have intelligence scores, and animals max intelligence is 2 -->
+	        <input v-if="monsterType==='ooze' || monsterType==='vermin'" type="number" id="intelligence"
+                  name="intelligence" readonly v-model="intelligenceScore"
+                  title="Vermin and oozes do not have intelligence scores">
+          <input v-else-if="monsterType==='animal'" type="number" id="intelligence"
+                  name="intelligence" min="0" max="2" v-model="intelligenceScore"
+                  title="Animals have an Intelligence score of 1 or 2"><!-- Modifier -->
+          <input v-else type="number" id="intelligence" name="intelligence" min="0" v-model="intelligenceScore">
+             ({{ intelligenceModifier }})
+        </td>
+        <td>
+	        <label for="wisdom">Wisdom</label><br>
+            <input type="number" id="wisdom" name="wisdom" min="0" v-model="wisdomScore">
+             ({{ wisdomModifier }})
+	      </td>
+          <td>
+            <label for="charisma">Charisma</label><br>
+	        <input type="number" id="charisma" name="charisma" min="0" v-model="charismaScore">
+	         ({{ charismaModifier }})
+          </td>
+        </tr>
+	    <tr>
+	      <td>
+	        <label id="fort_label">Fortitude</label> {{ fortitudeSave }}<br>
+	        <input type="radio" id="good_fort" area-labelledby="fort_label" name="fortitude" value="good" v-model="fortitudeQuality"><label for="good_fort">Good</label>
+          <input type="radio" id="poor_fort" area-labelledby="fort_label" name="fortitude" value="poor" v-model="fortitudeQuality"><label for="poor_fort">Poor</label>
+	      </td>
+	      <td>
+	        <label id="ref_label">Reflex</label> {{ reflexSave }}<br>
+	        <input type="radio" id="good_ref" area-labelledby="ref_label" name="reflex" value="good" v-model="reflexQuality"><label for="good_ref">Good</label>
+	        <input type="radio" id="poor_ref" area-labelledby="ref_label" name="reflex" value="poor" v-model="reflexQuality"><label for="poor_ref">Poor</label>
+	      </td>
+	      <td>
+	        <label id="will_label">Will</label> {{ willSave }}<br>
+	        <input type="radio" id="good_will" area-labelledby="will_label" name="will" value="good" v-model="willQuality"><label for="good_will">Good</label>
+          <input type="radio" id="poor_will" area-labelledby="will_label" name="will" value="poor" v-model="willQuality"><label for="poor_will">Poor</label>
+	      </td>
+	    </tr>
+	  </table>
+	  {% endverbatim %}
+  </fieldset>
+  <fieldset name="skills">
+    <legend>Skills</legend>
+    <p>Skill Points: {% verbatim %}<span v-if="skillPoints!=='NaN'">{{ skillPoints - totalRanks}}
+    Max number of skill ranks: {{ hdNumber + 3 }}</span>{% endverbatim %}
+    <br>
+    <select v-model="skillName">
+      <option value="null" selected disabled>Skill (modifier)</option>
+      {% for skill in skills %}
+        <option value="{{ skill.name }},{{ skill.modifier }}">{{ skill.name }} ({{ skill.modifier }})</option>
+      {% endfor %}
+    </select>
+    <br>
+    <label for="skill_ranks">Ranks: <input type="number" id="skill_ranks" v-model="skillRanks"></label>
+    <label for="racial_bonus">Racial Bonus: <input type="number" id="racial_bonus" v-model="skillRacialBonus"></label>
+    <label for="skill_detail" v-show="showSkillDetail">For: <input id="skill_detail" v-model="skillDetail"></label>
+    <button v-on:click.prevent="addSkill">Add</button>
+    <hr>
+    <!-- TODO: Create way to send skill list to Python to add to model 
+              Add synergy bonuses
+    -->
+  {% verbatim %}
+    <ul>
+      <li v-for="(skill, index) in skillList">
+        <button @click.prevent="deleteSkill(index)">Delete</button><button @click.prevent="editSkill(index)">Edit</button>
+        {{skill.skill_name}} {{ skillModifier(skill) }} ({{skill.ranks}})
+      </li>
+    </ul>
+  {% endverbatim %}
+  </fieldset>
+  <fieldset name="feats">
+    <legend>Feats</legend>
+    {% verbatim %}Feats: {{ numberOfFeats }}{% endverbatim %}
+    <select v-model="newFeat" @change.prevent="selectFeat">
+      <option value="null" selected disabled>Feat</option>
+      {% for feat in feats %}
+        <option value="{{ feat.name }}">{{ feat.name }}</option>
+      {% endfor %}
+    </select>
+    <br>
+    <input type="text" v-show="showFeatDetail" v-model="featDetail">
+    <br>
+    Prerequisites:
+    {% verbatim %}
+  <ul>
+    <template v-for="prerequisite in featPrerequisites">
+        <li v-if="prerequisite.kind=='feat'">{{ prerequisite.which }}</li>
+        <li v-else-if="prerequisite.kind=='ability'">{{ prerequisite.which }} {{ prerequisite.min }}+</li>
+        <li v-else-if="prerequisite.kind=='class'">level {{ prerequisite.min }} {{ prerequisite.which }}</li>
+        <li v-else-if="prerequisite.kind=='BAB'">base attack bonus {{ prerequisite.min }}+</li>
+    </template>
+  </ul>
+    {% endverbatim %}
+    <br>
+    <button @click.prevent="addFeat">Add</button>
+    <br>
+    {% verbatim %}
+      <ul>
+        <li v-for="(feat, index) in featList"><button @click.prevent="deleteFeat(index)">Delete</button>{{ index }} - {{ feat }}</li>
+      </ul>    
+    {% endverbatim %}
+  </fieldset>
+<fieldset name="attacks">
+    <legend>Attacks</legend>
+    {% verbatim %}
+    <p>BAB: {{ baseAtkBonus }} Grapple: {{ baseAtkBonus + strengthModifier + (monsterSizeModifier * -4) }}</p>
+    {% endverbatim %}
+    <p>Primary Weapons: A monster can use only one of these in a round. These are also used when making standard attacks and attacks of opportunity.<br>
+    Secondary Weapons: A monster can use all of these when making a full attack (in addition to one primary weapon attack). Weapons wielded in an off-hand/appendage are included in this.</p>
+    <label for="weapon_preset">Weapon Preset</label>
+    <select id="weapon_preset" v-model="presetWeapon" @change="presetAttack">
+      <option value="null" selected disabled>Weapon Preset</option>
+      <optgroup label="Melee Weapons">
+        {% for weapon in melee_weapons %}
+            <option value="{{  weapon.name }}">{{ weapon.name|title }} ({{  weapon.damage }})</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Ranged Weapons">
+        {% for weapon in ranged_weapons %}
+            <option value="{{  weapon.name }}">{{ weapon.name|title }} ({{  weapon.damage }})</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Natural Weapons">
+        <option value="bite">Bite</option>
+        <option value="claw">Claw</option>
+        <option value="projectile quill">Projectile Quill</option>
+        <option value="slam">Slam</option>
+        <option value="tail slap">Tail Slap</option>
+        <option value="tentacle">Tentacle</option>
+        <option value="wing slap">Wing Slap</option>
+      </optgroup>
+    </select>
+    <br>
+    <label for="attack_name">Name</label> <input type="text" id="attack_name" v-model="attackName"><br>
+    <label for="weapon_number">Number</label> <input type="number" id="weapon_number" v-model="weaponNumber"><br>
+    <label for="weapon_size">Size</label> <input type="text" id="weapon_size" v-model="weaponSize"><br>
+    <label for="weapon_reach">Reach</label> <input type="number" id="weapon_reach" v-model="weaponReach"><br>
+    <br>
+    <label for="attack_form">Form</label>
+    <select id="attack_form" v-model="attackForm">
+      <option value="melee"> Melee</option>
+      <option value="ranged"> Ranged</option>
+      <option value="thrown"> Thrown</option>
+      <option value="other"> No attack roll</option>
+    </select>
+    <label v-show="attackForm==='melee'" for="two-handed-attack"><input type="checkbox" id="two-handed-attack" v-model="attackTwoHanded"> Two-Handed/Strong Natural Weapon</label>
+    <label for="weapon_material">Material</label> 
+    <select id="weapon_material" v-model="weaponMaterial">
+      <option value="manufactured">Manufactured</option>
+      <option value="natural">Natural</option>
+    </select>
+    <br>
+    Usually, natural attacks with a damage bonus are for monsters with only one natural weapon, however, dragons' tail slap attacks are secondary attacks with such a bonus.
+    <br>
+    <!-- Damage and bonuses -->
+    <label for="weapon_damage">Damage</label> <input type="text" id="weapon_damage" v-model="weaponDamage"><br>
+    <label for="special_effect">Special Effect</label> <input type="text" id="special_effect" v-model="specialEffect"><br>
+    <label for="magic_weapon">Magical</label> <input type="number" id="magic_weapon" v-model="magicWeapon"><br>
+    <br>
+    {% verbatim %}
+    <p id="primary">Primary Attacks<br>
+      <button @click.prevent="addAttack">Add Primary Attack</button>
+      <ul>
+        <template v-for="(attack, index) in attackList">
+          <li v-if="attack.list=='primary'">
+            <button @click.prevent="deleteAttack(index)">Delete</button><button @click.prevent="editAttack(index)">Edit</button>
+            <strong>{{ attack.atk_name }} <span v-if="attack.number>1">{{ attack.number }}x</span></strong> + 
+            <span v-if="attack.atk_form=='melee'">{{ baseAtkBonus + strengthModifier + monsterSizeModifier + attack.magic }}</span>
+            <span v-else>{{ baseAtkBonus + dexterityModifier + monsterSizeModifier + attack.magic }}</span>
+            {{ attack.atk_form }} (
+            <span v-if="attack.weapon_damage">{{ attack.weapon_damage }}+{{ attack.damage_bonus + attack.magic }}</span>
+            <span v-if="attack.special_effect"> plus {{ attack.special_effect }}</span>
+            )
+          </li>
+        </template>
+      </ul>
+    </p>
+    <!-- TODO: BAB penalty -->
+    <p id="secondary">Secondary Attacks<br>
+      <button @click.prevent="addAttack">Add Secondary Attack</button>
+      <ul><template v-for="(attack, index) in attackList">
+        <li v-if="attack.list=='secondary'">
+          <button @click.prevent="deleteAttack(index)">Delete</button><button @click.prevent="editAttack(index)">Edit</button>
+            <strong>{{ attack.atk_name }} <span v-if="attack.number>1">{{ attack.number }}x</span></strong> + 
+            <span v-if="attack.atk_modifier=='melee'">{{ baseAtkBonus + strengthModifier + monsterSizeModifier + attack.magic }}</span>
+            <span v-else>{{ baseAtkBonus + dexterityModifier + monsterSizeModifier + attack.magic }}</span>
+            {{ attack.atk_form }} (
+            <span v-if="attack.weapon_damage">{{ attack.weapon_damage }}+{{ attack.damage_bonus + attack.magic }}</span>
+            <span v-if="attack.special_effect"> plus {{ attack.special_effect }}</span>
+            )
+          </li>
+      </template></ul>
+    </p>
+    {% endverbatim %}
+</fieldset>
+<fieldset name="defenses">
+  <legend>Armor Class</legend>
+  <p>Armor Class: {% verbatim %}{{ armorClass }}{% endverbatim %}</p>
+  <label>Natural armor <input type="number" name="natural_armor" v-model="naturalArmor"></label><br>
+    <label for="manufactured_armor">Armor</label>
+    <select id="manufactured_armor" name="manufactured_armor" v-model="manufacturedArmor" @change="armorCalculations">
+      <option value="none">None</option>
+      <optgroup label="Light Armor">
+        {% for armor in light_armor %}
+          <option value="{{  armor.name }}">{{ armor.name|title }} ({{  armor.armor_bonus }})</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Medium Armor">
+        {% for armor in medium_armor %}
+          <option value="{{  armor.name }}">{{ armor.name|title }} ({{  armor.armor_bonus }})</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Heavy Armor">
+        {% for armor in heavy_armor %}
+          <option value="{{  armor.name }}">{{ armor.name|title }} ({{  armor.armor_bonus }})</option>
+        {% endfor %}
+      </optgroup>
+    </select>
+    <label for="worn_shield">Shield</label>
+    <select id="worn_shield" v-model="wornShield" @change="armorCalculations">
+      <option value="none">None</option>
+      {% for shield in shields %}
+        <option value="{{ shield.name }}">{{ shield.name|title }} ({{ shield.armor_bonus }})</option>
+      {% endfor %}
+    </select>
+    Armor Check Penalty: {% verbatim %}{{ 0 - armorPenalty }}{% endverbatim %}
+    <!-- TODO: DR, SR, space/reach, aura -->
+</fieldset>
+<fieldset name="special_abilities">
+  <legend>Special Abilities</legend>
+  <label><input type="radio" value="Extraordinary" v-model="specialCategory">Extraordinary</label>
+  <label><input type="radio" value="Spell-like" v-model="specialCategory">Spell-like</label>
+  <label><input type="radio" value="Supernatural" v-model="specialCategory">Supernatural</label>
+  <br>
+  <label>Special Abilities</label>
+  <!-- TODO: hide unnecessary details when selecting other special ability -->
+  Select Preset:
+  <select v-model="specialPreset" @change="presetSpecialAbility">
+    {% for ability in special %}
+      <option value="{{ ability.name|title }}">{{ ability.name|title }}</option>
+    {% endfor %}
+  </select>
+  <br>
+  <label for="special-name">Name</label>:
+  <input type="text" id="special-name" v-model="specialAbility">
+  <br>
+<!-- TODO: bigger textarea-->
+    <label for="special-description">Description</label>:
+    <br>
+    <textarea id="special-description" v-model="specialDescription"></textarea>
+    <br>
+    <label for="special-shorthand">
+    <input type="text" id="special-shorthand" v-model="specialShorthand">
+    <br>
+    <!-- Saving Throws against the attack -->
+    <label for="special-saving-throw">Saving Throw: </label>
+    <select id="special-saving-throw" v-model="specialSave">
+      <option value="none">None</option>
+      <option value="fortitude">Fortitude</option>
+      <option value="reflex">Reflex</option>
+      <option value="will">Will</option>
+    </select>
+    <select v-model="specialSaveHalfOrNegate">
+      <option disabled value="none">Negate or Half</option>
+      <option value="negates">Negates</option>
+      <option value="halves">Halves</option>
+    </select>
+    <select v-model="specialSaveAbility">
+      <option disabled value="none">Based on Ability</option>
+      <option value="STR">Strength</option>
+      <option value="DEX">Dexterity</option>
+      <option value="CON">Constitution</option>
+      <option value="INT">Intelligence</option>
+      <option value="WIS">Wisdom</option>
+      <option value="CHA">Charisma</option>
+    </select>
+  <br>
+  <button @click.prevent="addSpecialAbility">Add Special Ability</button>
+  {% verbatim %}
+    <ul>
+      <li v-for="(ability, index) in specialAbilities">
+        <button @click.prevent="deleteSpecialAbility(index)">Delete</button><button @click.prevent="editSpecialAbility(index)">Edit</button>
+        <b>{{ ability.special_name }} ({{ ability.category[0] + ability.category[1] }})</b>: {{ ability.description }} 
+        <span v-if="ability.save!='none'"> {{ ability.save }} {{ ability.half_negate }} DC {{ saveDC(ability.save_base, ability.special_name) }}.
+                <span v-if="ability.save_base=='STR'"> Save DC is Strength-based</span>
+                <span v-else-if="ability.save_base=='DEX'"> Save DC is Dexterity-based</span>
+                <span v-else-if="ability.save_base=='CON'"> Save DC is Consitution-based</span>
+                <span v-else-if="ability.save_base=='INT'"> Save DC is Intelligence-based</span>
+                <span v-else-if="ability.save_base=='WIS'"> Save DC is Wisdom-based</span>
+                <span v-else-if="ability.save_base=='CHA'"> Save DC is Charisma-based</span>
+          </span>
+        <span v-if="ability.shorthand">(In statblock: {{ ability.shorthand }}.)</span>
+      </li>
+  </ul>
+  {% endverbatim %}
+  <!-- TODO
+  Other
+  -->
+</fieldset>
+<fieldset name="spells_and_psionics">
+  <legend>Spells and Psionics</legend>
+  <!-- TODO: spells cast as by a ??th level [spellcaster], ability for calculating DCs -->
+  <label for="spell_name">Spell or Power Name </label>
+  <input type="text" id="spell_name" v-model="spellName">
+  <br>
+  <!-- melee/ranged attack, saving throw -->
+  <br>
+  <label for="spell-level">Spell Level</label> <input type="number" id="spell-level" v-model="spellLevel">
+  <br>
+  As a <input type="number" id="caster-level" v-model="casterLevel"> <label for="caster-level">level</label> 
+  <select v-model="specialSaveAbility">
+      <option disabled value="none">Based on Ability</option>
+      <option value="STR">Strength</option>
+      <option value="DEX">Dexterity</option>
+      <option value="CON">Constitution</option>
+      <option value="INT">Intelligence</option>
+      <option value="WIS">Wisdom</option>
+      <option value="CHA">Charisma</option>
+    </select>-based magic user.
+  <br>
+  <button @click.prevent="addSpell('atWill')">At will</button>
+  <button @click.prevent="addSpell('onceDay')">1 per day</button>
+  <button @click.prevent="addSpell('thriceDay')">3 per day</button>
+  <button @click.prevent="addSpell('onceWeek')">1 per week</button>
+  <br>
+  <button @click.prevent="addSpell('psionics')">Psionics</button>
+  <br>
+  {% verbatim %}
+  <b>Spells (Sp)</b>
+  <ul>
+    <li>At Will—<i v-for="spell in spellsAtWill">{{ spell }}, </i></li>
+    <li>1 per day—<i v-for="spell in spellsOncePerDay">{{ spell }}, </i></li>
+    <li>3 per day—<i v-for="spell in spellsThricePerDay">{{ spell }}, </i></li>
+    <li>1 per week—<i v-for="spell in spellsOncePerWeek">{{ spell }}, </i></li>
+  </ul>
+  <b>Psionics (Sp)</b>
+  <ul>
+    <li>At Will—<i v-for="power in psionicPowers">{{ power }}, </i></li>
+  </ul>
+  {% endverbatim %} 
+</fieldset>
+<fieldset name="secondary_statistics">
+  <legend>Secondary Statistics</legend>
+  <label for="climate">Climate</label><br>
+    <select id="climate" name="climate">
+    <!--onmouseover="this.setAttribute('size', '3')" onmouseout="this.setAttribute('size', '1')" size="1" multiple-->
+      <option value="any">Any</option>
+      <option value="cold">Cold</option>
+      <option value="temperate">Temperate</option>
+      <option value="warm">Warm</option>
+    </select>
+    <br>
+    <label for="terrain">Terrain</label><br>
+    <select id="terrain" name="terrain">
+    <!--onmouseover="this.setAttribute('size', '4')" onmouseout="this.setAttribute('size', '1')" size="1" multiple-->
+      <option value="any">Any</option>
+      <option value="aquatic">Aquatic</option>
+      <option value="deserts">Deserts</option>
+      <option value="forests">Forests</option>
+      <option value="hills">Hills</option>
+      <option value="marshes">Marshes</option>
+      <option value="mountains">Mountains</option>
+      <option value="plains">Plains</option>
+      <option value="underground">Underground</option>
+    </select>
+    <br>
+    <label for="plane">Plane</label><br>
+    <input type="text" id="plane" name="plane"><br>
+    <label for="organization">Organization</label><br>
+    <input type="text" id="organization" name="organization"><br>
+    <label for="alignment">Alignment</label><br>
+    <input type="text" id="alignment" name="alignment"><br>
+    <label for="advancement">Advancement</label><br>
+    <input type="text" id="advancement" name="advancement">
+</fieldset>
+<fieldset name="description">
+  <legend>Description</legend>
+  <label for="physical-description">Appearance</label><br>
+  <textarea id="physical-description" name="monster_appearance"></textarea><br>
+  <label for="monster-description">Other</label><br>
+  <textarea id="monster-description" name="monster_description"></textarea>
+</fieldset>
+<template>
+  <input type="text" name="skills" :value="skillList">
+  <input type="text" name="feats" :value="featList">
+  <input type="text" name="attacks" :value="attackList">
+  <input type="text" name="special_abilities" :value="specialAbilities">
+  <input type="text" name="spells_at_will" :value="spellsAtWill">
+  <input type="text" name="spells_once_per_day" :value="spellsOncePerDay">
+  <input type="text" name="spells_thrice_per_day" :value="spellsThricePerDay">
+  <input type="text" name="spells_once_per_week" :value="spellsOncePerWeek">
+  <input type="text" name="psionic_powers" :value="psionicPowers">
+</template>
+</form>
+</div>
+<script>
+  //function toggleMultipleSelect() {
+    //self.setAttribute('size', '')
+  //}
+  function calculateSave(modifier, quality, hd) {
+    if (quality==='good') {
+      let save = Math.floor(hd/2)+2;
+      return save + modifier;
+    }
+    else if (quality==='poor') {
+      let save = Math.floor(hd/3);
+      if (save<0) {
+        save = 0;
+      }
+      return save + modifier;
+    }
+    else {
+      return '';
+    }
+  }
+  function calculateModifier(score) {
+    if (typeof(score==='number') && score>0) {
+      let modifier = Math.floor((score - 10)/2);
+      return modifier;
+    }
+    else {
+      return 0;
+    }
+  }
+  function commaToDot(txt) {
+    var str = txt + '';
+    const parts = str.split(",");
+    return parts[0] + '.' + parts[1];
+  }
+  function sizeModifier(size) {
+    switch(size) {
+      case 'fine':
+        return 8;
+        break;
+      case 'diminutive':
+        return 4;
+        break;
+      case 'tiny':
+        return 2;
+        break;
+      case 'small':
+        return 1;
+        break;
+      case 'medium':
+        return 0;
+        break;
+      case 'large':
+        return -1;
+        break;
+      case 'huge':
+        return -2;
+        break;
+      case 'gargantuan':
+        return -4;
+        break;
+      case 'colossal':
+        return -8;
+        break;
+      /*
+      Actually natural attacks are 2 size categories smaller than the monster,
+      but because this method is only used for attacks to check if they're smaller than the monster,
+      this should work.
+      */
+      case 'natural':
+        return 10;
+        break;
+    }
+  }
+  function monsterTypeCharacteristics(assignedType) {
+    let typeCharacteristics = {};
+    let temp_atk_as = null;
+    let functionTag = null;
+    let functionVar = null;
+    switch(assignedType) {
+    {% for monstertype in monstertypes %}
+      case '{{ monstertype.name }}':
+        typeCharacteristics.hdType = {{ monstertype.hd_type }};
+        typeCharacteristics.fortitudeQuality = '{{ monstertype.fortitude }}';
+        typeCharacteristics.reflexQuality = '{{ monstertype.reflex }}';
+        typeCharacteristics.willQuality = '{{ monstertype.will }}';
+        typeCharacteristics.typeBaseSkillPoints = {{ monstertype.base_skill_points }};
+        typeCharacteristics.typeSkillPoints = {{ monstertype.skill_points }};
+        typeCharacteristics.typeBaseNumberOfFeats = {{ monstertype.base_number_of_feats }};
+        typeCharacteristics.typeNumberOfFeats = {{ monstertype.number_of_feats }};
+        typeCharacteristics.atkAs = commaToDot('{{ monstertype.atk_as }}');
+        break;
+    {% endfor %}
+    }
+    // Here we add a list to typeCharacteristics
+    // This list contains special abilities that should be added to the monster
+    return typeCharacteristics;
+  }
+  function weaponInformation(selectedWeapon) {
+    let weaponInfo = {};
+    if (['bite', 'claw', 'slam', 'sting', 'tail slap', 'tentacle', 'wing slap'].includes(selectedWeapon)) {
+      weaponInfo.weaponSize = 'natural';
+      weaponInfo.attackForm = 'melee';
+      weaponInfo.weaponDamage = '';
+      weaponInfo.weaponMaterial = 'natural';
+    }
+    else {
+      switch (selectedWeapon) {
+        {% for weapon in melee_weapons %}
+          case '{{ weapon.name }}':
+            weaponInfo.weaponSize = '{{ weapon.display_size }}';
+            weaponInfo.attackForm = '{{ weapon.atk_form }}';
+            weaponInfo.weaponDamage = '{{ weapon.damage }}';
+            weaponInfo.weaponMaterial = 'manufactured';
+            break;
+        {% endfor %}
+        {% for weapon in ranged_weapons %}
+          case '{{ weapon.name }}':
+            weaponInfo.weaponSize = '{{ weapon.display_size }}';
+            weaponInfo.attackForm = '{{ weapon.atk_form }}';
+            weaponInfo.weaponDamage = '{{ weapon.damage }}';
+            weaponInfo.weaponMaterial = 'manufactured';
+            break;
+        {% endfor %}
+        case 'projectile quill':
+          weaponInfo.weaponSize = 'natural';
+          weaponInfo.attackForm = 'ranged';
+          weaponInfo.weaponDamage = '';
+          weaponInfo.weaponMaterial = 'natural';
+          break;
+      }
+    }
+    return weaponInfo;
+  }
+  function armorInformation(selectedArmor) {
+    armorInfo = {};
+    switch(selectedArmor) {
+      {% for armor in light_armor %}
+        case '{{ armor.name }}':
+          armorInfo.armorBonus = {{ armor.armor_bonus }};
+          armorInfo.armorPenalty = {{ armor.armor_penalty }};
+          armorInfo.maxDexBonus = {{ armor.max_dex }};
+          break;
+      {% endfor %}
+      {% for armor in medium_armor %}
+        case '{{ armor.name }}':
+          armorInfo.armorBonus = {{ armor.armor_bonus }};
+          armorInfo.armorPenalty = {{ armor.armor_penalty }};
+          armorInfo.maxDexBonus = {{ armor.max_dex }};
+          break;
+      {% endfor %}
+      {% for armor in heavy_armor %}
+        case '{{ armor.name }}':
+          armorInfo.armorBonus = {{ armor.armor_bonus }};
+          armorInfo.armorPenalty = {{ armor.armor_penalty }};
+          armorInfo.maxDexBonus = {{ armor.max_dex }};
+          break;
+      {% endfor %}
+    }
+    return armorInfo;
+  }
+  function shieldInformation(selectedShield) {
+    shieldInfo = {};
+    switch(selectedShield) {
+      {% for shield in shields %}
+        case '{{ shield.name }}':
+          shieldInfo.armorBonus = {{ shield.armor_bonus }};
+          shieldInfo.armorPenalty = {{ shield.armor_penalty }};
+          break;
+      {% endfor %}
+    }
+    return shieldInfo;
+  }
+  {% comment %} Autoescape to prevent special symbols from getting turned into ampersand code {% endcomment %}
+  {% autoescape off %}
+  function specialInformation(preset, monsterName) {
+    switch(preset) {
+      {% for ability in special %}
+        case '{{ ability.name }}':
+          return `{{ ability.description }}`;
+          break;
+      {% endfor %}
+    }
+  }
+  function featInformation(selectedFeat) {
+    let featInfo = {};
+    switch (selectedFeat) {
+      {% for feat in feats %}
+        case '{{ feat.name }}':
+          if ('{{ feat.prerequisite }}' == 'None') {
+            featInfo.prerequisites = [];
+          }
+          else {
+            console.log({{ feat.prerequisite }});
+            featInfo.prerequisites = {{ feat.prerequisite }};
+          }
+          featInfo.has_detail = '{{ feat.has_detail }}';
+          break;
+      {% endfor %}
+    }
+    return featInfo;
+  }
+  {% endautoescape %}
+app.mount('#app');
+  </script>
+{% endblock %}

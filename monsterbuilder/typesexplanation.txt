@@ -1,0 +1,226 @@
+Explanation of Types
+
+Types have a set number of *features*
+Hit Dice type (HD_type) {6, 8, 10, 12}
+BAB equal to ? HD (BABprog) {0.5, 0,75, 1}
+Good saves
+Number of skill points per HD	
+
+They also have *traits*
+These are a combination of special qualities and proficiencies.
+But others as well.
+
+Special Ability: {name: '', description: '', shorthand: '', save_type: '', save_effect: '', save_ability: '', category: ''}
+{name: '', description: '', shorthand: '', category: ''}
+
+abberation = MonsterType(name = 'abberation', hdtype = '8', atk_as = '0.75', fortitude = 'poor', reflex = 'poor', will = 'good', skill_points = '2', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}]
+animal = MonsterType(name = 'animal', hd_type = '8', atk_as = '0.75', fortitude = 'good', reflex = 'good', will = 'poor', skill_points = '15', number_of_feats = '0')
+	Traits = [{"name":"low-light vision","category":"senses"}]
+beast = MonsterType(name = 'beast', hd_type = '10', atk_as = '0.75', fortitude = 'good', reflex = 'good', will = 'poor', skill_points = '1', number_of_feats = '0')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}, {"name":"low-light vision","category":"senses"}]
+construct = MonsterType(name = 'construct', hd_type = '10', atk_as = '0.75', fortitude = 'poor', reflex = 'poor', will = 'poor', skill_points = '0', number_of_feats = '0')
+	Traits = [{"name":"poison immunity","shorthand":"poison","category":"immunity"},{"name":"sleep immunity","shorthand":"sleep","category":"immunity"},{"name":"paralysis immunity","shorthand":"paralysis","category":"immunity"},{"name":"stunning immunity","shorthand":"stunning","category":"immunity"},{"name":"disease immunity","shorthand":"disease","category":"immunity"},{"name":"mind-influence immunity","shorthand":"mind-influencing effects","category":"immunity"},{"name":"death effect immunity","shorthand":"death effects","category":"immunity"},{"name":"necromantic effects immunity","shorthand":"necromantic effects","category":"immunity"},{"name":"not alive","description":"The MON is not subject to critical hits, subdual damage, ability damage, ability drain, energy drain, any effect requiring a Fortitude save (unless it also affects objects). It is not at risk of death from massive damage, but when reduced to 0 hp or less, it is immediately destroyed.","category":"quality"}]
+dragon = MonsterType(name = 'dragon', hd_type = '12', atk_as = '1', fortitude = 'good', reflex = 'good', will = 'good', skill_points = '6', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}, {"name":"low-light vision","category":"senses"}, {"name":"sleep immunity","shorthand":"sleep","category":"immunity"},{"name":"paralysis immunity","shorthand":"paralysis","category":"immunity"}]
+elemental = MonsterType(name = 'elemental', hd_type = '8', atk_as = '0.75', fortitude = 'open', reflex = 'open', will = 'open', skill_points = '2', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"},{"name":"poison immunity","shorthand":"poison","category":"immunity"},{"name":"sleep immunity","shorthand":"sleep","category":"immunity"},{"name":"paralysis immunity","shorthand":"paralysis","category":"immunity"},{"name":"stunning immunity","shorthand":"stunning","category":"immunity"},{"name":"ambiguous facing","description":"As the MON has no clear front or back, it is not subject to critical hits or flanking.","category":"quality"}]
+fey = MonsterType(name = 'fey', hd_type = '6', atk_as = '0.5', fortitude = 'poor', reflex = 'good', will = 'good', skill_points = '2', number_of_feats = '1')
+	Traits = [{"name":"low-light vision","category":"senses"}]
+giant = MonsterType(name = 'giant', hd_type = '8', atk_as = '0.75', fortitude = 'good', reflex = 'poor', will = 'poor', skill_points = '1', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}]
+humanoid = MonsterType(name = 'humanoid', hd_type = '8', atk_as = '0.75', fortitude = 'open', reflex = 'open', will = 'open', skill_points = '1', number_of_feats = '1')
+	Traits = 
+magicalbeast = MonsterType(name = 'magical beast', hd_type = '10', atk_as = '1', fortitude = 'good', reflex = 'good', will = 'poor', skill_points = '1', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}, {"name":"low-light vision","category":"senses"}]
+monstroushumanoid = MonsterType(name = 'monstrous humanoid', hd_type = '8', atk_as = '1', fortitude = 'poor', reflex = 'good', will = 'good', skill_points = '2', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}]
+ooze = MonsterType(name = 'ooze', hd_type = '10', atk_as = '0.75', fortitude = 'poor', reflex = 'poor', will = 'poor', skill_points = '0', number_of_feats = '0')
+	Traits = [{"name":"poison immunity","shorthand":"poison","category":"immunity"},{"name":"sleep immunity","shorthand":"sleep","category":"immunity"},{"name":"paralysis immunity","shorthand":"paralysis","category":"immunity"},{"name":"stunning immunity","shorthand":"stunning","category":"immunity"},{"name": "polymorphing immunity", "shorthand": "polymorph", "category": "immunity"}, {"name":"mind-influence immunity","shorthand":"mind-influencing effects","category":"immunity"}, {"name":"ambiguous facing","description":"As the MON has no clear front or back, it is not subject to critical hits or flanking.","category":"quality"}] bonus hp
+outsider = MonsterType(name = 'outsider', hd_type = '8', atk_as = '1', fortitude = 'good', reflex = 'good', will = 'good', skill_points = '8', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}]
+plant = MonsterType(name = 'plant', hd_type = '8', atk_as = '0.75', fortitude = 'good', reflex = 'poor', will = 'poor', skill_points = '0', number_of_feats = '0')
+	Traits = [{"name":"low-light vision","category":"senses"}, {"name":"poison immunity","shorthand":"poison","category":"immunity"},{"name":"sleep immunity","shorthand":"sleep","category":"immunity"},{"name":"paralysis immunity","shorthand":"paralysis","category":"immunity"},{"name":"stunning immunity","shorthand":"stunning","category":"immunity"},{"name": "polymorphing immunity", "shorthand": "polymorph", "category": "immunity"}, {"name":"mind-influence immunity","shorthand":"mind-influencing effects","category":"immunity"},{"name":"not subject to critical hits", "description": "The MON is not subject to critical hits.","category":"quality"}]
+shapechanger = MonsterType(name = 'shapechanger', hd_type = '8', atk_as = '0.75', fortitude = 'good', reflex = 'good', will = 'good', skill_points = '1', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}]
+undead = MonsterType(name = 'undead', hd_type = '12', atk_as = '0.5', fortitude = 'poor', reflex = 'poor', will = 'good', skill_points = '2', number_of_feats = '1')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}, {"name":"poison immunity","shorthand":"poison","category":"immunity"},{"name":"sleep immunity","shorthand":"sleep","category":"immunity"}, {"name":"paralysis immunity","shorthand":"paralysis","category":"immunity"}, {"name":"stunning immunity","shorthand":"stunning","category":"immunity"},{"name":"disease immunity","shorthand":"disease","category":"immunity"}, {"name":"mind-influence immunity","shorthand":"mind-influencing effects","category":"immunity"},{"name":"death effect immunity","shorthand":"death effects","category":"immunity"},{"name":"necromantic effects immunity","shorthand":"necromantic effects","category":"immunity"}, {"name":"not alive","description":"The MON is not subject to critical hits, subdual damage, ability damage, ability drain, energy drain, any effect requiring a Fortitude save (unless it also affects objects). It is not at risk of death from massive damage, but when reduced to 0 hp or less, it is immediately destroyed.","category":"quality"}]
+vermin = MonsterType(name = 'vermin', hd_type = '8', atk_as = '0.75', fortitude = 'good', reflex = 'poor', will = 'poor', skill_points = '12', number_of_feats = '0')
+	Traits = [{"name":"darkvision","shorthand":"60 ft.","category":"senses"}, {"name":"mind-influence immunity","shorthand":"mind-influencing effects","category":"immunity"}] if venomous, gains bonus for DC
+
+
+1:26:00
+
+Model of traits
+trait name
+trait group (sense, proficiency, immunity, bonus, resistance, aura, spell, alignment, treasure, vulnerability, language, ability)
+trait description
+
+MonsterTrait(name= "venom", group = "attack")
+MonsterTrait(name= "bonus hp", group = "bonus")
+MonsterTrait(name= "ability damage", group = "immunity")
+MonsterTrait(name= "ability drain", group = "immunity")
+MonsterTrait(name= "any effect requiring a Fortitude save (unless it also works on objects)", group = "immunity")
+MonsterTrait(name= "crits", group = "immunity")
+MonsterTrait(name= "energy drain", group = "immunity")
+MonsterTrait(name= "death effects", group = "immunity")
+MonsterTrait(name= "disease", group = "immunity")
+MonsterTrait(name= "flanking", group = "immunity")
+MonsterTrait(name= "mind-influencing effects", group = "immunity")
+MonsterTrait(name= "necromantic effects", group = "immunity")
+MonsterTrait(name= "paralysis", group = "immunity")
+MonsterTrait(name= "poison", group = "immunity")
+MonsterTrait(name= "shapeshifting", group = "immunity")
+MonsterTrait(name= "sleep", group = "immunity")
+MonsterTrait(name= "stunning", group = "immunity")
+MonsterTrait(name= "subdual damage", group = "immunity")
+MonsterTrait(name= "simple weapons", group = "proficiency")
+MonsterTrait(name= "martial weapons", group = "proficiency")
+MonsterTrait(name= "exotic weapons", group = "proficiency")
+MonsterTrait(name= "light armor", group = "proficiency")
+MonsterTrait(name= "medium armor", group = "proficiency")
+MonsterTrait(name= "heavy armor", group = "proficiency")
+MonsterTrait(name= "shield", group = "proficiency")
+MonsterTrait(name= "low-light vision", group = "senses")
+MonsterTrait(name= "darkvision 60 ft.", group = "senses")
+
+
+Subtypes
+Fire, immune to fire, 
+Swarm = MonsterSubType(name = "swarm", fortitude = "poor", reflex = "poor", will = "good", skill_points = "2", feats = "1")
+	Traits "slashing resistance", "piercing resistance", "weapon damage immunity" (fine and diminutive only) "not subject to crits", "not subject to flanking"
+
+
+Natural Weapons
+# attack +ab (dmg+str_mod)
+
+
+
+
+Monster input user
+Name = string
+Type = string
+Subtypes = list of strings
+Hit Dice number = integer
+Ability Scores = integers
+Save quality = string
+Attacks
+Natural Armor = integer
+Manufactured Armor = string
+Shield = string
+Special Qualities
+Special Attacks
+Skill ranks
+Feats
+
+Monster output
+Name = string
+Type = string
+Subtypes = list of strings
+Hit Dice number = integer
+Hit Dice type = integer
+Ability Scores and modifiers
+Saves = integer
+Hit points = integer
+Armor Class
+Attacks
+Special Qualities
+Special Attacks
+Skill points
+Feats
+
+
+Armor
+(name='padded', armor_bonus='1', max_dex='8', armor_penalty='0', arcane_failure='5', weight='light')
+(name='leather', armor_bonus='2', max_dex='6', armor_penalty='0', arcane_failure='10', weight='light')
+(name='studded leather', armor_bonus='3', max_dex='5', armor_penalty='1', arcane_failure='15', weight='light')
+(name='chain shirt', armor_bonus='4', max_dex='4', armor_penalty='2', arcane_failure='20', weight='light')
+(name='hide', armor_bonus='3', max_dex='4', armor_penalty='3', arcane_failure='20', weight='medium')
+(name='scale mail', armor_bonus='4', max_dex='3', armor_penalty='4', arcane_failure='25', weight='medium')
+(name='chainmail', armor_bonus='5', max_dex='2', armor_penalty='5', arcane_failure='30', weight='medium')
+(name='breastplate', armor_bonus='5', max_dex='3', armor_penalty='4', arcane_failure='25', weight='medium')
+(name='splint mail', armor_bonus='6', max_dex='0', armor_penalty='7', arcane_failure='40', weight='heavy')
+(name='banded mail', armor_bonus='6', max_dex='1', armor_penalty='6', arcane_failure='35', weight='heavy')
+(name='half-plate', armor_bonus='7', max_dex='0', armor_penalty='7', arcane_failure='40', weight='heavy')
+(name='full plate', armor_bonus='8', max_dex='1', armor_penalty='6', arcane_failure='35', weight='heavy')
+(name='buckler', armor_bonus='1', armor_penalty='-1', arcane_failure='5', weight='shield')
+(name='shield, small, wooden', armor_bonus='1', armor_penalty='-1', arcane_failure='5', weight='shield')
+(name='shield, small, steel', armor_bonus='1', armor_penalty='-1', arcane_failure='5', weight='shield')
+(name='shield, large, wooden', armor_bonus='2', armor_penalty='-2', arcane_failure='15', weight='shield')
+(name='shield, large, steel', armor_bonus='2', armor_penalty='-2', arcane_failure='15', weight='shield')
+(name='shield, tower', armor_bonus='0', armor_penalty='-10', arcane_failure='50', weight='shield')
+
+        name = request.POST.get('name')
+        monstertype = request.POST.get('monstertype')
+        hd_number = request.POST.get('hd_number')
+        size = request.POST.get('size')
+        # Speed
+        speed = validate_speed(request.POST.get('speed'))
+        burrow_speed = validate_speed(request.POST.get('burrow_speed'))
+        climb_speed = validate_speed(request.POST.get('climb_speed'))
+        fly_quality = request.POST.get('fly_quality')
+        if fly_quality:
+            fly_speed = (validate_speed(request.POST.get('fly_speed')), fly_quality)
+        else:
+            fly_speed = (validate_speed(request.POST.get('fly_speed')), "")
+        swim_speed = validate_speed(request.POST.get('swim_speed'))
+
+
+
+        # Type, needs to exist to perform other code
+        try:
+            MonsterType.objects.get(name=monstertype)
+        except MonsterType.DoesNotExist:
+            monstertype = None
+            return render(request, 'blog/monsterbuilder.html',
+                          {'name': name, 'monstertype': monstertype, 'size': size, 'hd_number': hd_number,})
+        # monstertype is a dictionary
+        monstertype = MonsterType.objects.filter(name=monstertype).values()[0]
+        # Ability Scores
+        # The following is a list of tuples in the form (ability score, ability modifier):
+        abilityscores = list(map(calculate_modifier, (request.POST.get('strength'), request.POST.get('dexterity'),
+                                                 request.POST.get('constitution'), request.POST.get('intelligence'),
+                                                 request.POST.get('wisdom'), request.POST.get('charisma')),
+                            ("strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma")))
+
+        # Saves
+        # Dependent on the quality of the save (good or poor), the monster's number of HD,
+        # and the relevant ability modifier is added.
+        # Check user input first
+        fortitude_quality = request.POST.get('fortitude')
+        reflex_quality = request.POST.get('reflex')
+        will_quality = request.POST.get('will')
+        # If user hasn't entered save quality then call on MonsterType to gain the quality of the save
+        # TODO: what if the monster is an elemental? Or a humanoid?
+        if not fortitude_quality:
+            fortitude_quality = monstertype["fortitude"]
+        if not reflex_quality:
+            reflex_quality = monstertype["reflex"]
+        if not will_quality:
+            will_quality = monstertype["will"]
+        # TODO: fix all broken references to ability modifiers
+        fortitude = calculate_save(fortitude_quality, hd_number_calc) + abilityscores[2]['constitution'][1]
+        reflex = calculate_save(reflex_quality, hd_number_calc) + abilityscores[1]['dexterity'][1]
+        will = calculate_save(will_quality, hd_number_calc) + abilityscores[4]['wisdom'][1]
+# Hit Points
+        # average hp is calculated by multiplying the number of HD by the sum of the average of the HD type,
+        # the constitution modifier and bonus hp from the type or the Toughness feat if applicable.
+        hp = floor(((monstertype['hd_type'] / 2) + abilityscores[2]['constitution'][1]) * hd_number_calc)
+
+        # Skill Points
+        # animals and vermin's number of skill points are independent of intelligence and HD
+        # constructs, oozes and plants have no skill points, so their table entry says 0
+        if monstertype['name'] in ["animal", "vermin"]:
+            skillpoints = (10, monstertype['skill_points'])
+        elif monstertype['name'] in ["dragon", "outsider"]:
+            skillpoints = (monstertype['skill_points']+abilityscores[3]['intelligence'][1])*hd_number_calc
+        else:
+            skillpoints = monstertype['skill_points']*hd_number_calc
+
+        return render(request, 'blog/monsterbuilder.html',
+                      {'name': name, 'monstertype': monstertype, 'size': size, 'hd_number': hd_number, 'hp': hp,
+                       'abilityscores': abilityscores, 'fortitude': fortitude, 'reflex': reflex, 'will': will,
+                       'fortitude_quality': fortitude_quality, 'reflex_quality': reflex_quality, 'will_quality': will_quality,
+                       'speed': speed, 'burrow_speed': burrow_speed, 'climb_speed': climb_speed,
+                       'fly_speed': fly_speed, 'swim_speed': swim_speed, 'skillpoints': skillpoints, 'skills': skills})
+                       

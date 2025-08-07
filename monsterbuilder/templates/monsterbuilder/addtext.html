@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <style></style>
+  <script>
+    function addText() {
+      let text = document.forms["myForm"]["text"].value;
+      let oldlist = document.getElementById("outputlist").innerHTML;
+      document.getElementById("outputlist").innerHTML = oldlist + "<li>" + text + "</li>";
+    }
+  </script>
+</head>
+<body>
+  <form name="myForm">
+    <input type="textarea" name="text">
+  </form>
+  <button onclick="addText()">Add text</button>
+  <ul id="outputlist">
+  </ul>
+</body>
+<footer>
+</footer>
+</html>
+
