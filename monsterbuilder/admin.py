@@ -5,7 +5,7 @@ from django.contrib import admin
 from .models import Skill, Weapon, Armor, Feat, SpecialAbility, MonsterType
 
 class MonsterTypeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'hd_type', 'atk_as', 'fortitude', 'reflex', 'will',
+    list_display = ('name', 'hd_type', 'atk_as', 'fortitude', 'reflex', 'will',
                     'base_skill_points', 'skill_points', 'base_number_of_feats', 'number_of_feats')
 
     def get_ordering(self, request):

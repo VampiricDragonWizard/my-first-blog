@@ -47,7 +47,7 @@ ARMOR_WEIGHT = [
 SAVE_QUALITY = [
     ("good", "Good"),
     ("poor", "Poor"),
-    ("open", "Open")
+    ("open", "Undecided")
 ]
 SAVING_THROWS = [
     ("FORT", "Fortitude"),
@@ -93,9 +93,11 @@ class Monster(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
     # hd_number should be positive
     hd_number = models.FloatField(blank=False, null=False)
+    bonus_hp = models.IntegerField(blank=True, default=0)
     monstertype = models.ForeignKey('monsterbuilder.MonsterType', on_delete=models.PROTECT, related_name="+", blank=False, null=False)
-#    subtype = models.ManyToManyField('monsterbuilder.MonsterSubType', null=True, blank=True)
+    subtypes = models.ManyToManyField('monsterbuilder.MonsterSubType')
     size = models.IntegerField(choices=SIZE_MODIFIERS, default=0)
+    reach = models.IntegerField(choices=SIZE_MODIFIERS, default=0)
 
     # Ability Scores
     # The modifier does not have to be stored in the model. It's easily calculated from the score.
@@ -125,20 +127,22 @@ class Monster(models.Model):
 
     # Armor Class
     natural_armor = models.IntegerField(default=0)
-    manufactured_armor = models.ForeignKey('monsterbuilder.Armor', on_delete=models.PROTECT, blank=True, null=True)
+    manufactured_armor = models.ForeignKey('monsterbuilder.Armor', on_delete=models.PROTECT,
+                                           blank=True, null=True, related_name='monster_armor')
+    shield = models.ForeignKey('monsterbuilder.Armor', on_delete=models.PROTECT,
+                               blank=True, null=True, related_name='monster_shield')
+    deflection_bonus = models.IntegerField(default=0)
     # natural, manufactured, deflection bonus
 
     skills = models.ManyToManyField('monsterbuilder.Skill', through="SkillRanks")
     feats = models.ManyToManyField('monsterbuilder.Feat', through="FeatDetails")
-    # TODO: monster_special_abilities (many, so ManyToManyField? possibly with Through table for specifics?
-    #  or not another table?)
+    special_abilities = models.JSONField(null=True, blank=True)
 
     climate = models.CharField(max_length=4, choices=TEMPERATURE, default="Any")
     terrain = models.CharField(max_length=11, choices=TERRAIN, default="Any")
     plane = models.TextField(null=True)
     organization = models.TextField(null=True)
     challenge_rating = models.FloatField(null=True)
-    shield = models.TextField(null=True)
     treasure = models.TextField(null=True)
     alignment = models.TextField(null=True)
     advancement = models.TextField(null=True)
@@ -171,8 +175,9 @@ class MonsterType(models.Model):
                  f"{self.base_skill_points}, {self.skill_points}, {self.base_number_of_feats}, {self.number_of_feats},"
                  f"{self.monster_special_abilities})")
 
-#class MonsterSubType(models.Model):
-#    name = models.CharField(max_length=18, unique=True)
+class MonsterSubType(models.Model):
+    name = models.CharField(max_length=18, unique=True)
+    subtype_special_abilities = models.JSONField(null=True, blank=True)
 
 
 class Skill(models.Model):
@@ -218,6 +223,7 @@ class FeatDetails(models.Model):
     details = models.TextField(default="")
 
 class SpecialAbility(models.Model):
+    # TODO: re-add saves
     name = models.CharField(max_length=30, unique=True)
     description = models.TextField(null=True, blank=True)
     shorthand = models.CharField(null=True, blank=True, max_length=30)
@@ -240,9 +246,15 @@ class Weapon(models.Model):
     damage = models.CharField(max_length=10)
     atk_form = models.CharField(max_length=6, choices=ATTACK_FORM)
     proficiency = models.CharField(max_length=7)
-    # Lower bound range on which weapon threatens a crit
-    #crit_range = models.IntegerField(default=20)
-    #crit_double = models.IntegerField(default=2)
+    # TODO: Add crit ranges and doubles
+    # TODO: Reach/Range
+    # Number of numbers on which a weapon threatens a crit
+    crit_range = models.IntegerField(default=1)
+    crit_double = models.CharField(max_length=5, default='✕2')
+    range_increment = models.IntegerField(default=0)
+    reach = models.BooleanField(default=False)
+    double = models.BooleanField(default=False)
+
 
     def __str__(self):
          return f"{self.name} ({self.damage}, {self.size}, {self.atk_form}, {self.proficiency})"
@@ -256,4 +268,5 @@ class Armor(models.Model):
     arcane_failure = models.IntegerField()
 
     def __str__(self):
-        return f"{self.name} ({self.weight}, {self.armor_bonus}, {self.max_dex}, {self.armor_penalty}, {self.arcane_failure})"
+        return (f"{self.name} ({self.weight}, {self.armor_bonus},"
+                f"{self.max_dex}, {self.armor_penalty}, {self.arcane_failure})")

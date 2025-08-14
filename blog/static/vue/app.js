@@ -6,6 +6,9 @@ const app = Vue.createApp({
         monsterName: '',
         // Size
         monsterSize: 'medium',
+        monsterReach: 5,
+        bodyShape: 'tall',
+        // TODO: finish this section
         // Show on Page
         showSkillsSection: true,
         
@@ -54,6 +57,7 @@ const app = Vue.createApp({
         weaponNumber: 1,
         weaponSize: null,
         weaponReach: null,
+        weaponRange: null,
         attackForm: null,
         // attackTwoHanded is for manufactured weapons wielded with more than one hand or strong natural weapons
         attackTwoHanded: false,
@@ -61,16 +65,16 @@ const app = Vue.createApp({
         specialEffect: null,
         magicWeapon: 0,
         weaponMaterial: null,
-        attackId: 2, // TODO: index vue
         attackList: [
           { atk_name: 'flaming longspear', number: 1, weapon_size: 'large', atk_form: 'melee', atk_modifier: 'strength', atk_bonus: 1, weapon_damage: '1d8',
-          damage_bonus: 3, special_effect: '1d4 fire', magic: 1, two_handed: true, material: 'manufactured', list: 'primary'},
+          two_handed: true, damage_str_modifier: 1.5, crit_range: 1, crit_double: 2, special_effect: '1d4 fire', magic: 1, feats: [], material: 'manufactured', list: 'primary'},
           { atk_name: 'sting', number: 2, weapon_size: 'natural', atk_form: 'melee', atk_modifier: 'dexterity', atk_bonus: 1, weapon_damage: '1',
-          damage_bonus: 2, special_effect: 'poison', magic: 0, two_handed: false, material: 'natural', list: 'secondary'}
+          two_handed: false, damage_str_modifier: 0.5, crit_range: 1, crit_double: 2, special_effect: 'poison', magic: 0, feats: [], material: 'natural', list: 'secondary'}
         ],
         // Armor
         naturalArmor: 0,
         manufacturedArmor: 'none',
+        deflectionBonus: 0,
         wornShield: 'none',
         armorBonus: 0,
         armorPenalty: 0,
@@ -88,12 +92,14 @@ const app = Vue.createApp({
         specialPreset: null,
         specialAbility: null,
         specialCategory: null,
+        specialType: '',
         specialDescription: '',
         specialShorthand: '',
         specialSave: 'none',
         specialSaveHalfOrNegate: null,
         specialSaveAbility: 'none',
-        specialAbilities: [{name: 'Name', category: 'Supernatural', description: 'Range', save: 'Fortitude', half_negate: 'negate', save_base: 'STR'}, {name: 'Name', category: 'Spell-like', description: 'Range', save: 'Reflex', half_negate: 'half', save_base: 'CON'}],
+        specialAbilities: [{special_name: 'Test1', special_type: 'Supernatural', category: 'attack', description: 'Range', save: 'Fortitude', half_negate: 'negate', save_base: 'STR'}, {special_name: 'Test2', special_type: 'Spell-like', category: 'attack', description: 'Range', save: 'Reflex', half_negate: 'half', save_base: 'CON'}],
+        monsterTypeSpecialAbilities: [],
       };
     },
     computed: {
@@ -245,7 +251,8 @@ const app = Vue.createApp({
         }
       },
       numberOfFeats() {
-         return this.typeBaseNumberOfFeats + (Math.floor(this.hdCalc-1/4) * this.typeNumberOfFeats);
+        // TODO: EHD or HD?
+        return this.typeBaseNumberOfFeats + (Math.floor((this.hdCalc-1)/4) * this.typeNumberOfFeats);
       },
       showSkillDetail() {
         return ['Craft,INT', 'Knowledge,INT', 'Profession,WIS', 'Perform,CHA'].includes(this.skillName);
@@ -253,6 +260,11 @@ const app = Vue.createApp({
       armorClass() {
         return 10 + this.naturalArmor + this.armorBonus + this.dexterityModifier;
       },
+      /*
+      allSpecialAbilities() {
+        return this.specialAbilities.concat(this.monsterTypeSpecialAbilities);
+      }
+      */
     },
     methods: {
        assignType() {
@@ -266,21 +278,31 @@ const app = Vue.createApp({
         this.typeBaseNumberOfFeats = typeCharacteristics.typeBaseNumberOfFeats;
         this.typeNumberOfFeats = typeCharacteristics.typeNumberOfFeats;
         this.atkAs = typeCharacteristics.atkAs;
-        // Add the items of the monster type special abilities list to the monster special abilities list
-        // TODO: add other monsterType characteristics here
         if (this.monsterType==='construct' || this.monsterType==='undead') {
           this.constitutionScore = 0;
         }
         else if (this.monsterType==='ooze') {
           this.intelligenceScore = 0;
           this.featList.push("Blindfight");
-          // Bonus hp
+          // Bonus hp under bonusHitPoints
         }
         else if (this.monsterType==='vermin') {
           this.intelligenceScore = 0;
         }
         else if (this.monsterType==='animal' && this.intelligenceScore>2) {
           this.intelligenceScore = 2;
+        }
+        // Remove special abilities gained from previous monstertype
+        this.monsterTypeSpecialAbilities = [];
+        for (ability of typeCharacteristics.specialAbilities) {
+          const newAbility = {
+            special_name: ability.name,
+            category: ability.category,
+            description: ability.description,
+            shorthand: ability.shorthand,
+            special_type: '',
+          };
+          this.monsterTypeSpecialAbilities.push(newAbility);
         }
       },
       getModifier(modifier) {
@@ -299,8 +321,28 @@ const app = Vue.createApp({
             return this.charismaModifier;
         }
       },
+      typicalReach() {
+        if (this.monsterSizeModifier>1) {
+            this.monsterReach = 0;
+        }
+        else if (this.monsterSizeModifier>=0 || (this.monsterSize=='large' && this.bodyShape=='long')) {
+            this.monsterReach = 5;
+        }
+        else if ((this.monsterSize=='large' && this.bodyShape=='tall') || (this.monsterSize=='huge' && this.bodyShape=='long')) {
+            this.monsterReach = 10;
+        }
+        else if ((this.monsterSize=='huge' && this.bodyShape=='tall') || (this.monsterSize=='gargantuan' && this.bodyShape=='long')) {
+            this.monsterReach = 15;
+        }
+        else if ((this.monsterSize=='gargantuan' && this.bodyShape=='tall') || (this.monsterSize=='colossal' && this.bodyShape=='long')) {
+            this.monsterReach = 20;
+        }
+        else {
+            this.monsterReach = 30;
+        }
+      },
       addSkill() {
-      //TODO: add bonuses from feats and synergies
+      //TODO: add bonuses from synergies
         // Split values from form
         const skillValue = this.skillName.split(",");
         if (!this.skillRanks) {
@@ -316,10 +358,15 @@ const app = Vue.createApp({
           ranks: this.skillRanks,
           racial_bonus: this.skillRacialBonus,
           feat_bonus: 0,
+          size_modifier: 0,
         };
         // If skill has variations, the specific variant must be added to the name
         if (this.skillDetail) {
             skill.skill_name = skill.skill_name + " (" + this.skillDetail + ")"
+        }
+        // Hide skill size modifiers
+        if (skill.skill_name=='Hide') {
+            skill.size_modifier = sizeModifier(this.monsterSize) * 4;
         }
         // Feats
         if (this.featList.includes('Alertness') && ['Listen', 'Spot'].includes(skill.skill_name)) {
@@ -334,7 +381,7 @@ const app = Vue.createApp({
         //}
         */
         if (this.featList.includes(`Skill Focus(${skill.skill_name})`)) {
-            skill.feat_bonus += 3;
+            skill.feat_bonus += 2;
         }
         // TODO: skill synergies
         
@@ -365,7 +412,7 @@ const app = Vue.createApp({
         this.skillList.splice(item, 1);
       },
       skillModifier(skill) {
-        return skill.ranks + skill.racial_bonus + skill.feat_bonus + this.getModifier(skill.modifier);
+        return skill.ranks + skill.racial_bonus + skill.feat_bonus + skill.size_modifier + this.getModifier(skill.modifier);
       },
       selectFeat() {
         const featInfo = featInformation(this.newFeat);
@@ -397,83 +444,45 @@ const app = Vue.createApp({
         this.weaponMaterial = weaponInfo.weaponMaterial;
       },
       addAttack(e) {
-      // TODO: only essential information in list: atk_name, number, weapon_size, atk_form, magic_bonus, weapon_damage, damage_modifier: strength bonus/penalty and how high, special_effect, two_handed?, material, list
-        //TODO: attack_modifier is strength or dexterity, damageBonus, two-handed?
-       // Initialize values
-        let attackBonus = null;
-        let damageBonus = 0;
-        let attackDamage = null;
-        let attackForm = null;
-        let attackList = null;
-        
-        // Primary Attacks get full BAB, whereas Secondary Attacks have a penalty
-        if (e.target.parentElement.id==="primary") {
-          attackBonus = this.baseAtkBonus;
-          attackList = "primary";
+      // TODO: only essential information in list: atk_name, number, weapon_size, atk_form, magic_bonus, weapon_damage, damage_modifier: strength bonus/penalty and how high, special_effect, two_handed?, material, list        
+        if (this.weaponMaterial=='natural') {
+          // Create natural attack entry
+          let attack = {
+            group: this.attackGroup, //TODO: create
+            sole: this.attackTwoHanded,
+            form: this.attackForm,
+            atk_name: this.attackName,
+            number: this.weaponNumber,
+            reach: this.weaponReach,
+            range: this.weaponRange,
+            weapon_damage: this.weaponDamage,
+            crit_range: //TODO: create,
+            crit_double: //TODO: create,
+            special_effect: this.specialEffect,
+            magic: this.magicWeapon,
+          };
+          // Update List
+          this.naturalAttackList.push(attack); //TODO: create
         }
-        else if (e.target.parentElement.id==="secondary") {
-          // TODO: dual-wielding
-          // TODO: Multiattack feat (-2 instead of -5)
-          if (this.featList.includes("multiattack")) {
-            attackBonus = this.baseAtkBonus-2;
-          }
-          else {
-            attackBonus = this.baseAtkBonus-5;
-          }
-          attackList = "secondary";
-        }
-        let sizeOfWeapon = sizeModifier(this.weaponSize);
-        // Attack Bonus and Attack Damage depend on Attack Form
-        if (this.attackForm==='melee') {
-          attackBonus += this.strengthModifier + this.monsterSizeModifier;//this.sizeModifier(this.monsterSize);
-          /*
-          DAMAGE: Half extra strength bonus if manufactured weapon wielded with two hands, or a strong natural weapon.
-          Check if strengthModifier is positive to prevent adding a strength penalty.
-          Manufactured weapon cannot be light (smaller than monster).
-          If a monster has only one natural weapon it is usually strong, but it can have more than one strong natural weapon (see dragons).
-          this.sizeModifier(this.weaponSize)
-          this.sizeModifier(this.monsterSize)
-          or sole natural weapon
-          */
-          if (this.strengthModifier > 0 && (this.attackTwoHanded && (sizeOfWeapon >= this.monsterSizeModifier))) {
-            damageBonus = this.strengthModifier*1.5;
-          }
-          else {
-            damageBonus = this.strengthModifier;
-          }
-        }
-        else if (this.attackForm==='ranged') {
-          attackBonus += this.dexterityModifier + this.monsterSizeModifier;//this.sizeModifier(this.monsterSize);
-          // Add strength penalty, unless using a crossbow. If using composite bow, add strength bonus.
-          if ((this.strengthModifier < 0 && !this.attackName.includes('crossbow')) || (this.strengthModifier > 0 && this.attackName.includes('composite'))) {
-            damageBonus = this.strengthModifier;
-          }
-        }
-        else if (this.attackForm=='thrown') {
-          attackBonus += this.dexterityModifier + this.monsterSizeModifier;
-          damageBonus = this.strengthModifier;
-        }
-        // Magical Bonuses
-        attackBonus += this.magicWeapon;
-        damageBonus += this.magicWeapon;
-        
-        // Create attack entry
-        let attack = {
-          atk_name: this.attackName,
-          number: this.weaponNumber,
-          weapon_size: this.weaponSize,
-          atk_form: this.attackForm,
-          atk_bonus: attackBonus,
-          weapon_damage: this.weaponDamage,
-          damage_bonus: damageBonus,
-          special_effect: this.specialEffect,
-          magic: this.magicWeapon,
-          two_handed: this.attackTwoHanded,
-          material: this.weaponMaterial,
-          list: attackList,
+        else {
+          // Create manufactured attack entry
+          let attack = {
+            hand: this.weaponHand, //TODO: create
+            form: this.attackForm,          
+            weapon_size: this.weaponSize,
+            atk_name: this.attackName,
+            number: this.weaponNumber,
+            reach: this.weaponReach,
+            range: this.weaponRange,
+            weapon_damage: this.weaponDamage,
+            crit_range: ,//TODO: create,
+            crit_double: ,//TODO: create,
+            special_effect: this.specialEffect,
+            magic: this.magicWeapon,
+            }
+          // Update List
+          this.manufacturedAttackList.push(attack); //TODO: create
         };
-        // Update List
-        this.attackList.push(attack);
         console.log(attack);
         // Reset form
         this.attackName = null;
@@ -489,19 +498,132 @@ const app = Vue.createApp({
       editAttack(item) {
         // Put values from list item into form
         const attack = this.attackList[item];
+        this.weaponHand = attack.hand;
+        this.attackGroup = attack.group;
+        this.attackTwoHanded = attack.sole;
+        this.attackForm = attack.form;
+        this.weaponSize = attack.weapon_size;
         this.attackName = attack.atk_name;
         this.weaponNumber = attack.number;
-        this.weaponSize = attack.weapon_size;
-        this.attackForm = attack.atk_form;      
+        this.weaponReach = attack.reach;
+        this.weaponRange = attack.range;
         this.weaponDamage = attack.weapon_damage;
+        //TODO: create = attack.crit_range;
+        //TODO: create = attack.crit_double;
         this.specialEffect = attack.special_effect;
         this.magicWeapon = parseInt(attack.magic);
-        this.attackTwoHanded = attack.two_handed;
-        this.weaponMaterial = attack.material;
       },
       deleteAttack(item) {
         this.attackList.splice(item, 1);
       },
+      // TODO:  add extra attacks manufactured weapons
+      calculateManufacturedAttackBonus(form, hand, multiple, size) {
+        if (multiple) {
+          let multiWeaponFightingPenalty = 2;
+          if (sizeModifier(size)>=this.monsterSizeModifier) {
+            multiWeaponFightingPenalty += 2;
+          }
+          if (!this.featList.includes('Multifighting') || !this.featList.includes('Two-Weaponfighting')) {
+            multiWeaponFightingPenalty += 2;
+          }
+          let attackArray = [];
+          attackArray.push(this.calculateManufacturedAttackBonus(form, 'one-handed', false, size) - multiWeaponFightingPenalty);
+          for (let i=0; i<NUMBER_OF_ATTACKS, i++) {
+            attackArray.push(this.calculateManufacturedAttackBonus(form, 'off-hand', false, size) - multiWeaponFightingPenalty);
+          }
+          return attackArray;
+        }
+        else {
+          if (melee) {
+            if (hand=='off-hand' && !(this.featList.includes('Ambidexterity') || this.featList.includes('Multidexterity'))) {
+              this.strengthModifier-4;
+            }
+            else {
+              this.strengthModifier;
+            }
+          }
+          else {
+            this.dexterityModifier;
+          }
+        }
+      },
+      calculateManufacturedDamageBonus(form, hand, multiple, name, size) {
+        if (multiple) {
+          let damageArray = [];
+          damageArray.push(this.calculateManufacturedDamageBonus(form, 'one-handed', false, name, size));
+          if (form=='melee') {
+            if (this.strengthModifier<0) {
+              damageArray.push(this.strengthModifier);
+            }
+            else {
+              damageArray.push(this.strengthModifier*0.5);
+            }
+          }
+          else if (form=='ranged' && this.strengthModifier<0 && ((name.includes('bow') && !name.includes('crossbow')) || name.includes('sling'))) {
+            damageArray.push(this.strengthModifier);
+          }
+          else {
+            damageArray.push(0);
+          }
+          return damageArray;
+        }
+        else {
+          if (form=='ranged') {
+            if((this.strengthModifier<0 && ((name.includes('bow') && !name.includes('crossbow')) || name.includes('sling'))) || (this.strengthModifier>0 && name.includes('composite'))) {
+              return this.strengthModifier;
+            }
+            else {
+              return 0;
+            }
+          }
+          else if (this.strengthModifier>0 && hand=='off-hand') {
+            return this.strengthModifier * 0.5;
+          }
+          else if (this.strengthModifier>0 && form=='melee' && hand=='two-handed' && sizeModifier(size)>=this.monsterSizeModifier) {
+            return this.strengthModifier * 1.5;
+          }
+          else {
+            return this.strengthModifier;
+          }
+        }
+      },
+      calculateNaturalAttackBonus(group, form, sole) {
+        let penalty = 0;
+	    if(group=='secondary') {
+	      if(this.featList.includes('Multiattack')) {
+	        penalty = 2;
+	      }
+	      else {
+	        penalty = 5;
+	      }
+	    if (form=='melee') {
+	      return this.strengthModifier - penalty;
+	    }
+	    else {
+		  return this.dexterityModifier - penalty;
+		}
+	  },
+	  calculateNaturalDamageBonus(group, form, sole){
+	    if (form=='ranged') {
+	     return 0
+	    }
+	    else {
+	      if (this.strengthModifier>0) {
+	        if (sole) {
+	          return this.strengthModifier*1.5
+	        }
+	        else if(group=='secondary') {
+	          return this.strengthModifier*0.5
+	        }
+	        else {
+	          return this.strengthModifier
+	        }
+	      }
+	      else {
+	        return this.strengthModifier
+	      }
+	    }
+	  },
       armorCalculations() {
         // TODO: this can probably be done more efficiently
         // Armor
@@ -525,7 +647,7 @@ const app = Vue.createApp({
         }
       },
       addSpell(list) {
-        // spellLevel, casterLevel attacks saves
+        // TODO: spellLevel, casterLevel attacks saves
         if (list=='atWill') {
           this.spellsAtWill.push(this.spellName);
         }
@@ -545,19 +667,19 @@ const app = Vue.createApp({
       },
       presetSpecialAbility() {
         this.specialAbility = this.specialPreset;
-        let description = specialInformation(this.specialPreset, this.monsterName);
-        this.specialDescription = description;
-        //preset saves
-        if (this.specialPreset=='breath weapon') {
-            this.specialSave = 'Reflex';
-            this.specialSaveHalfOrNegate = 'negates';
-            this.specialSaveAbility = 'CON';
-        }
+        let specialInfo = specialInformation(this.specialPreset, this.monsterName);
+        this.specialDescription = specialInfo.description;
+        this.specialShorthand = specialInfo.shorthand;
+        this.specialCategory = specialInfo.category;
+        this.specialSave = specialInfo.save_type;
+        this.specialSaveHalfOrNegate = specialInfo.save_effect;
+        this.specialSaveAbility = specialInfo.save_ability;
       },
       addSpecialAbility() {     
         const newAbility = {
           special_name: this.specialAbility,
           category: this.specialCategory,
+          special_type: this.specialType,
           description: this.specialDescription,
           shorthand: this.specialShorthand,
           save: this.specialSave,
@@ -567,14 +689,23 @@ const app = Vue.createApp({
           console.log(newAbility);
         this.specialAbilities.push(newAbility);
       },
-      deleteSpecialAbility(item) {
-        this.specialAbilities.splice(item, 1);
+      deleteSpecialAbility(item, list) {
+        if (list=='fromType') {
+          this.monsterTypeSpecialAbilities.splice(item, 1);
+        }
+        else {
+          this.specialAbilities.splice(item, 1);
+        }
       },
-      editSpecialAbility(item) {
-        console.log("running editSpecialAbilities...");
-        const ability = this.specialAbilities[item];
+      editSpecialAbility(item, list) {
+        let ability = {};
+        if (list=='fromType') {
+          ability = this.monsterTypeSpecialAbilities[item];
+        }
+        else {
+          ability = this.specialAbilities[item];
+        }
         this.specialAbility = ability.special_name;
-        console.log(ability.category);
         this.specialCategory = ability.category;
         this.specialDescription = ability.description;
         this.specialSave = ability.save;
@@ -604,5 +735,12 @@ const app = Vue.createApp({
             return Math.floor(10 + (0.5 * this.hdCalc)) + this.getModifier(modifier);
         }
       }
-    }
+    },
+    watch: {
+      monsterType(newType, oldType) {
+        if (oldType=='ooze') {
+          this.featList.splice(this.featList.indexOf("Blindfight"), 1);
+        }
+      },
+    },
   });

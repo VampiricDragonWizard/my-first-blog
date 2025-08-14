@@ -13,9 +13,11 @@ class MonsterForm(forms.Form):
     #monstersubtype = forms.ModelMultipleChoiceField(queryset=MonsterType.objects.all(), to_field_name='name', required=False)
     size = forms.ChoiceField(choices=['fine', 'diminutive', 'tiny', 'small', 'medium',
                                       'large', 'huge', 'gargantuan', 'colossal'])
+    reach = forms.IntegerField(min_value=0)
     hd_number = forms.IntegerField(min_value=1)
     hd_fraction = forms.BooleanField(required=False)
     # hd number must be positive
+    bonus_hp = forms.IntegerField(min_value=0)
 
     # Speeds
     speed = forms.IntegerField(min_value=0)
@@ -42,6 +44,7 @@ class MonsterForm(forms.Form):
     natural_armor = forms.IntegerField(min_value=0, required=False)
     manufactured_armor = forms.ModelChoiceField(queryset=Armor.objects.filter(weight__in=['light', 'medium', 'heavy']),
                                                 to_field_name="name", required=False)
+    deflection_bonus = forms.IntegerField(min_value=0, required=False)
     worn_shield = forms.ModelChoiceField(queryset=Armor.objects.filter(weight='shield'),
                                          to_field_name="name", required=False)
 

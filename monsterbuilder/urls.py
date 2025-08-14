@@ -3,6 +3,8 @@ from monsterbuilder import views
 
 urlpatterns = [
     path('monsterbuilder/', views.monster_builder, name='monster_builder'),
+    path('monsters/', views.MonsterList.as_view(), name='monsters'),
+    path('monsterbuilder/<int:pk>/', views.monster_statblock, name='monster_statblock'),
     path('monsterbuilder/api/type', views.monster_builder_api_monstertype, name='monster_builder_api_monstertype'),
     path('monsterbuilder/api/skill', views.monster_builder_api_skill, name='monster_builder_api_skill'),
     path('monsterbuilder/api/feat', views.monster_builder_api_feat, name='monster_builder_api_feat'),

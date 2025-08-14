@@ -1,0 +1,9 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+          {% for monster in monsters %}
+              <h2><a href="{% url 'monster_statblock' pk=monster.pk %}">{{ monster.name }}</a></h2>
+          {% empty %}
+              <p>No monsters yet. <a href="{% url 'monster_builder' %}">Go make one!</a></p>
+          {% endfor %}
+{% endblock %}

@@ -5,7 +5,9 @@
             <article class="post">
               <h2><a href="{% url 'post_detail' pk=post.pk %}"">{{ post.title }}</a></h2>
               <time class="date">published: {{ post.published_date }}</time>
+              {% autoescape off %}
               <p>{{ post.text|linebreaksbr }}</p>
+              {% endautoescape %}
             </article>
           {% endfor %}
 {% endblock %}

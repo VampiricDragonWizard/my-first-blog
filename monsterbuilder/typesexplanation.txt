@@ -91,136 +91,131 @@ Swarm = MonsterSubType(name = "swarm", fortitude = "poor", reflex = "poor", will
 	Traits "slashing resistance", "piercing resistance", "weapon damage immunity" (fine and diminutive only) "not subject to crits", "not subject to flanking"
 
 
-Natural Weapons
-# attack +ab (dmg+str_mod)
+Information required for MonsterBuilder
+how attack bonuses work, especially bows
+monster type characterictics
+
+        // Primary Attacks get full BAB, whereas Secondary Attacks have a penalty
+        if (e.target.parentElement.id==="primary") {
+          attackBonus = this.baseAtkBonus;
+          attackList = "primary";
+        }
+        else if (e.target.parentElement.id==="secondary") {
+          // TODO: dual-wielding
+          /*
+          // TODO: Multiattack feat (-2 instead of -5)
+          if (this.featList.includes("multiattack")) {
+            attackBonus = this.baseAtkBonus-2;
+          }
+          else {
+            attackBonus = this.baseAtkBonus-5;
+          }*/
+          attackList = "secondary";
+        }
+        let sizeOfWeapon = sizeModifier(this.weaponSize);
+        // Attack Bonus and Attack Damage depend on Attack Form
+        if (this.attackForm==='melee') {
+          attackBonus += this.strengthModifier + this.monsterSizeModifier;
+          /*
+          DAMAGE: Half extra strength bonus if manufactured weapon wielded with two hands, or a strong natural weapon.
+          Check if strengthModifier is positive to prevent adding a strength penalty.
+          Manufactured weapon cannot be light (smaller than monster).
+          If a monster has only one natural weapon it is usually strong, but it can have more than one strong natural weapon (see dragons).
+          this.sizeModifier(this.weaponSize)
+          this.sizeModifier(this.monsterSize)
+          or sole natural weapon
+          */
+          if (this.strengthModifier > 0 && (this.attackTwoHanded && (sizeOfWeapon >= this.monsterSizeModifier))) {
+            damageBonus = this.strengthModifier*1.5;
+          }
+          else {
+            damageBonus = this.strengthModifier;
+          }
+        }
+        else if (this.attackForm==='ranged') {
+          attackBonus += this.dexterityModifier + this.monsterSizeModifier;
+          // Add strength penalty, unless using a crossbow. If using composite bow, add strength bonus.
+          if ((this.strengthModifier < 0 && !this.attackName.includes('crossbow')) || (this.strengthModifier > 0 && this.attackName.includes('composite'))) {
+            damageBonus = this.strengthModifier;
+          }
+        }
+        else if (this.attackForm=='thrown') {
+          attackBonus += this.dexterityModifier + this.monsterSizeModifier;
+          damageBonus = this.strengthModifier;
+        }
+        
+        
+        
+FEATS
+Ambidexterity, ignore off hand penalties
+Armor/Weapon/Shield proficiency
+Combat Reflexes (1+DEX mod AOOs)
+Extra Turning (turning * 4)
+Improved Critical (double threat range)
+Mobility (+4 AC vs AOO)
+Spell focus (+2 DC chosen school of magic
+Spell Mastery
+Two-Weapon Fighting (reduces penalties by 2)
+Weapon Finesse (light, rapier, spiked chain, shield's acp applies)
+Weapon Focus (+1 attack roll)
+Weapon specializaition (+2 damage, 4th fighter only)
 
 
+4 main differences
+natural
+primary/secondary
+melee/ranged
+regular OR strong (usually sole) natural weapon
+
+manufactured
+melee/
+one-handed/off-hand/two-handed/multiple or double weapon(s)
+/ranged/thrown
+
+{ nature: 'manufactured/natural', {nat-only group:'primary/secondary', sole:True/False},{man-only weapon_size: 'SIZE', hand: 'one-handed/off-hand/two-handed/multiple/double'},  form: 'melee/ranged/thrown', atk_name: 'keen flaming longspear', number: 1, weapon_damage: '1d8', crit_range: 2, crit_double: 'x2', special_effect: '1d4 fire', magic: 1},
 
 
-Monster input user
-Name = string
-Type = string
-Subtypes = list of strings
-Hit Dice number = integer
-Ability Scores = integers
-Save quality = string
-Attacks
-Natural Armor = integer
-Manufactured Armor = string
-Shield = string
-Special Qualities
-Special Attacks
-Skill ranks
-Feats
+if: natural, primary, melee
+	attack: str
+	damage: str*(strong && str>0? 1.5 : 1)
+if: natural, primary, ranged
+	attack: dex
+	damage: 0
+if: natural, secondary, melee
+	attack: str -(multiattack? 2 : 5)
+	damage: str*(strong && str>0? 1.5 : 0.5)
+if: natural, secondary, ranged
+	attack: dex -(multiattack? 2 : 5)
+	damage: 0
 
-Monster output
-Name = string
-Type = string
-Subtypes = list of strings
-Hit Dice number = integer
-Hit Dice type = integer
-Ability Scores and modifiers
-Saves = integer
-Hit points = integer
-Armor Class
-Attacks
-Special Qualities
-Special Attacks
-Skill points
-Feats
+if: manufactured, melee, one-handed
+	attack: str (extra attacks if BAB>4)
+	damage: str
+if: manufactured, melee, two-handed
+	attack: str (extra attacks if BAB>4)
+	damage: str*(str>0? 1.5 : 1)
+if: manufactured, melee, off-hand
+	attack: str ambidextrous or multidextrous? 0 : -4 (extra attacks if BAB>4)
+	damage: str*(str>0? 0.5 : 1)
+if: manufactured, melee, double or multiple weapons
+	attack1: str -2 off-hand==light? -0 : -2 multi-weapon-fighting or two-weapon-fighting? -0 : -2 (extra attacks if BAB>4)
+	attack2+: str -2 ambidextrous or multidextrous? 0 : -4 off-hand==light? -0 : -2 multi-weapon-fighting or two-weapon-fighting? -0 : -2 (extra attacks if BAB>4)
+	damage1: str
+	damage2: str*(str>0? 0.5 : 1)
 
-
-Armor
-(name='padded', armor_bonus='1', max_dex='8', armor_penalty='0', arcane_failure='5', weight='light')
-(name='leather', armor_bonus='2', max_dex='6', armor_penalty='0', arcane_failure='10', weight='light')
-(name='studded leather', armor_bonus='3', max_dex='5', armor_penalty='1', arcane_failure='15', weight='light')
-(name='chain shirt', armor_bonus='4', max_dex='4', armor_penalty='2', arcane_failure='20', weight='light')
-(name='hide', armor_bonus='3', max_dex='4', armor_penalty='3', arcane_failure='20', weight='medium')
-(name='scale mail', armor_bonus='4', max_dex='3', armor_penalty='4', arcane_failure='25', weight='medium')
-(name='chainmail', armor_bonus='5', max_dex='2', armor_penalty='5', arcane_failure='30', weight='medium')
-(name='breastplate', armor_bonus='5', max_dex='3', armor_penalty='4', arcane_failure='25', weight='medium')
-(name='splint mail', armor_bonus='6', max_dex='0', armor_penalty='7', arcane_failure='40', weight='heavy')
-(name='banded mail', armor_bonus='6', max_dex='1', armor_penalty='6', arcane_failure='35', weight='heavy')
-(name='half-plate', armor_bonus='7', max_dex='0', armor_penalty='7', arcane_failure='40', weight='heavy')
-(name='full plate', armor_bonus='8', max_dex='1', armor_penalty='6', arcane_failure='35', weight='heavy')
-(name='buckler', armor_bonus='1', armor_penalty='-1', arcane_failure='5', weight='shield')
-(name='shield, small, wooden', armor_bonus='1', armor_penalty='-1', arcane_failure='5', weight='shield')
-(name='shield, small, steel', armor_bonus='1', armor_penalty='-1', arcane_failure='5', weight='shield')
-(name='shield, large, wooden', armor_bonus='2', armor_penalty='-2', arcane_failure='15', weight='shield')
-(name='shield, large, steel', armor_bonus='2', armor_penalty='-2', arcane_failure='15', weight='shield')
-(name='shield, tower', armor_bonus='0', armor_penalty='-10', arcane_failure='50', weight='shield')
-
-        name = request.POST.get('name')
-        monstertype = request.POST.get('monstertype')
-        hd_number = request.POST.get('hd_number')
-        size = request.POST.get('size')
-        # Speed
-        speed = validate_speed(request.POST.get('speed'))
-        burrow_speed = validate_speed(request.POST.get('burrow_speed'))
-        climb_speed = validate_speed(request.POST.get('climb_speed'))
-        fly_quality = request.POST.get('fly_quality')
-        if fly_quality:
-            fly_speed = (validate_speed(request.POST.get('fly_speed')), fly_quality)
-        else:
-            fly_speed = (validate_speed(request.POST.get('fly_speed')), "")
-        swim_speed = validate_speed(request.POST.get('swim_speed'))
-
-
-
-        # Type, needs to exist to perform other code
-        try:
-            MonsterType.objects.get(name=monstertype)
-        except MonsterType.DoesNotExist:
-            monstertype = None
-            return render(request, 'blog/monsterbuilder.html',
-                          {'name': name, 'monstertype': monstertype, 'size': size, 'hd_number': hd_number,})
-        # monstertype is a dictionary
-        monstertype = MonsterType.objects.filter(name=monstertype).values()[0]
-        # Ability Scores
-        # The following is a list of tuples in the form (ability score, ability modifier):
-        abilityscores = list(map(calculate_modifier, (request.POST.get('strength'), request.POST.get('dexterity'),
-                                                 request.POST.get('constitution'), request.POST.get('intelligence'),
-                                                 request.POST.get('wisdom'), request.POST.get('charisma')),
-                            ("strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma")))
-
-        # Saves
-        # Dependent on the quality of the save (good or poor), the monster's number of HD,
-        # and the relevant ability modifier is added.
-        # Check user input first
-        fortitude_quality = request.POST.get('fortitude')
-        reflex_quality = request.POST.get('reflex')
-        will_quality = request.POST.get('will')
-        # If user hasn't entered save quality then call on MonsterType to gain the quality of the save
-        # TODO: what if the monster is an elemental? Or a humanoid?
-        if not fortitude_quality:
-            fortitude_quality = monstertype["fortitude"]
-        if not reflex_quality:
-            reflex_quality = monstertype["reflex"]
-        if not will_quality:
-            will_quality = monstertype["will"]
-        # TODO: fix all broken references to ability modifiers
-        fortitude = calculate_save(fortitude_quality, hd_number_calc) + abilityscores[2]['constitution'][1]
-        reflex = calculate_save(reflex_quality, hd_number_calc) + abilityscores[1]['dexterity'][1]
-        will = calculate_save(will_quality, hd_number_calc) + abilityscores[4]['wisdom'][1]
-# Hit Points
-        # average hp is calculated by multiplying the number of HD by the sum of the average of the HD type,
-        # the constitution modifier and bonus hp from the type or the Toughness feat if applicable.
-        hp = floor(((monstertype['hd_type'] / 2) + abilityscores[2]['constitution'][1]) * hd_number_calc)
-
-        # Skill Points
-        # animals and vermin's number of skill points are independent of intelligence and HD
-        # constructs, oozes and plants have no skill points, so their table entry says 0
-        if monstertype['name'] in ["animal", "vermin"]:
-            skillpoints = (10, monstertype['skill_points'])
-        elif monstertype['name'] in ["dragon", "outsider"]:
-            skillpoints = (monstertype['skill_points']+abilityscores[3]['intelligence'][1])*hd_number_calc
-        else:
-            skillpoints = monstertype['skill_points']*hd_number_calc
-
-        return render(request, 'blog/monsterbuilder.html',
-                      {'name': name, 'monstertype': monstertype, 'size': size, 'hd_number': hd_number, 'hp': hp,
-                       'abilityscores': abilityscores, 'fortitude': fortitude, 'reflex': reflex, 'will': will,
-                       'fortitude_quality': fortitude_quality, 'reflex_quality': reflex_quality, 'will_quality': will_quality,
-                       'speed': speed, 'burrow_speed': burrow_speed, 'climb_speed': climb_speed,
-                       'fly_speed': fly_speed, 'swim_speed': swim_speed, 'skillpoints': skillpoints, 'skills': skills})
-                       
+if: manufactured, ranged
+	attack: dex (extra attacks if BAB>4)
+	damage: (bow or sling && str<0 && !crossbow && !composite bow) || (composite bow && str>0)? str : 0
+if: manufactured, ranged, multiple
+	attack: dex -2 off-hand==light? -0 : -2 multi-weapon-fighting or two-weapon-fighting? -0 : -2 (extra attacks if BAB>4)
+	attack2+: dex -2 ambidextrous or multidextrous? 0 : -4 off-hand==light? -0 : -2 multi-weapon-fighting or two-weapon-fighting? -0 : -2
+	damage1: (bow or sling && str<0 && !crossbow && !composite bow) || (composite bow && str>0)? str : 0
+	damage2: (bow or sling && str<0 && !crossbow && !composite bow)? str : 0
+if: manufactured, thrown
+	attack: dex (extra attacks if BAB>4)
+	damage: str
+if: manufactured, thrown, multiple
+	attack: dex -2 off-hand==light? -0 : -2 multi-weapon-fighting or two-weapon-fighting? -0 : -2 (extra attacks if BAB>4)
+	attack2+: dex -2 ambidextrous or multidextrous? 0 : -4 off-hand==light? -0 : -2 multi-weapon-fighting or two-weapon-fighting? -0 : -2
+	damage1: str
+	damage2: 0

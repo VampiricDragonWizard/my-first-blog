@@ -4,12 +4,12 @@
   <table class="srdStatBlock">
   <tr>
     <th>Size/Type:</th>
-    <td>{{ monster.size }} {{ monster.type }} {% if monster.subtypes %}
+    <td>{{ monster.size }} {{ monster.monstertype }} {% if monster.subtypes %}
       ({% for subtype in monster.subtypes %}{{ subtype }}, {% endfor %}){% endif %}</td>
   </tr>
   <tr>
     <th>Hit Dice:</th>
-    <td>{{ monster.hd_number }}d{{ monster.hd_type }}+{{ monster.con_mod + monster.extra_hp }} ({{ monster.hp_average }} hp)</td>
+    <td>{{ monster.hd_number }}d{{ monster.monstertype.hd_type }}+{{ floor(monster.constitution[1] * monster.hd_number) + monster.bonus_hp }} ({{ monster.hp_average }} hp)</td>
   </tr>
   <tr>
     <th>Initiative:</th>
@@ -17,21 +17,27 @@
   </tr>
   <tr>
 		<th>Speed:</th>
-		<td>{{ monster.speed[0] }} ft. (6 squares)</td>
+		<!-- TODO: create template tag filter 'divide' -->
+		<td>{{ monster.speed }} ft. ({{ monster.speed|divide_by:'5' }} squares)
+		  {% if monster.speed_burrow>0 %}, burrow {{ monster.speed_burrow }} ft.{% endif %}
+		  {% if monster.speed_climb>0 %}, climb {{ monster.speed_climb }} ft.{% endif %}
+		  {% if monster.speed_fly>0 %}, fly {{ monster.speed_fly }} ft. ({{ monster.speed_fly_maneuverability }}){% endif %}
+		  {% if monster.speed_swim>0 %}, swim {{ monster.speed_swim }} ft.{% endif %}
+		</td>
 	</tr>
 	<tr>
 		<th>Armor Class:</th>
 		<!-- monster.armor would be a list of armor ex. +x natural +y breastplate -->
-		<td>{{ monster.ac }} ({{ monster.armor }}), touch {{ monster.ac_touch }}, {{ monster.ac_flat }}</td>
+		<td>{{ 10 + monster.natural_armor + monster.manufactured_armor.armor_bonus + monster.shield.armor_bonus + monster.deflection_bonus + monster.dexterity[1] }} ({{ monster.armor }}), touch {{ 10 + monster.deflection_bonus + monster.dexterity[1] }}, flat-footed {{ 10 + monster.natural_armor + monster.manufactured_armor.armor_bonus + monster.shield.armor_bonus + monster.deflection_bonus }}</td>
 	</tr>
 	<tr>
 		<th>Base Attack/Grapple:</th>
-		<td>{{ monster.bab }}/{{ monster.grapple }}</td>
+		<td>{{ monster.bab }}/{{ monster.bab + monster.strength[1] + monster.size * -4 }}</td>
 	</tr>
 	<tr>
 		<th>Attack:</th>
 		<!-- monster.armor would be a list of attacks ex. <weapon> +x melee/ranged (1dy+z/a) -->
-		<td>{{ monster.attack }}</td>
+		<td>{% for attack in monster.attacks %}{{ attack }}{% endfor %}</td>
 	</tr>
 	<tr>
 		<th>Full Attack:</th>
@@ -43,27 +49,27 @@
 	</tr>
 	<tr>
 		<th>Special Attacks:</th>
-		<td>{{ monster.attacks_special }}</td>
+		<td>{% for attack in monster.special_attacks %}{{ attack }}{% endfor %}</td>
 	</tr>
 	<tr>
 		<th>Special Qualities:</th>
-		<td>{{ monster.qualities_special }}</td>
+		<td>{% for quality in monster.special_qualities %}{{ quality }}{% endfor %}</td>
 	</tr>
 	<tr>
 		<th>Saves:</th>
-		<td>Fort {% if monster.fortitude >= 0 %}+{% endif %}{{ monster.fortitude }}, Ref {% if monster.reflex >= 0 %}+{% endif %}{{ monster.reflex }}, Will {% if monster.will >= 0 %}+{% endif %}{{ monster.will }}</td>
+		<td>Fort {{ monster.fortitude_save|add_modifier_sign }}, Ref {{ monster.reflex_save|add_modifier_sign }}, Will {{ monster.will_save|add_modifier_sign }}</td>
 	</tr>
 	<tr>
 		<th>Abilities:</th>
-		<td>Str {{ monster.strength }}, Dex {{ monster.dexterity }}, Con {{ monster.constitution }}, Int {{ monster.intelligence }}, Wis {{ monster.wisdom }}, Cha {{ monster.charisma }}</td>
+		<td>Str {{ monster.strength[0] }}, Dex {{ monster.dexterity[0] }}, Con {{ monster.constitution[0] }}, Int {{ monster.intelligence[0] }}, Wis {{ monster.wisdom[0] }}, Cha {{ monster.charisma[0] }}</td>
 	</tr>
 	<tr>
 		<th>Skills:</th>
-		<td>{% for skill in skills %} {{ skill.name }} {% if skill.modifier >= 0 %}+{% endif %}{{ skill.modifier }} {% endfor %}</td>
+		<td>{% for skill in skills %} {{ skill.name }} {{ skill.modifier|add_modifier_sign }} {% endfor %}</td>
 	</tr>
 	<tr>
 		<th>Feats:</th>
-		<td>{{ monster.feats }}</td>
+		<td>{% for feat in monster.feats %}{{ feat }}{% endfor %}</td>
 	</tr>
 	<tr>
 		<th>Environment:</th>

@@ -1,6 +1,7 @@
 from math import ceil, floor
 from urllib import request
 from django.http import HttpResponse, JsonResponse
+from django.views.generic.list import ListView
 from django.shortcuts import render, get_object_or_404
 from rest_framework.parsers import JSONParser
 from .forms import MonsterForm
@@ -9,32 +10,22 @@ from .serializers import (MonsterTypeSerializer, SkillSerializer, FeatSerializer
                           WeaponSerializer, ArmorSerializer, SpecialAbilitySerializer)
 
 # Views for the Monster Builder
-def calculate_modifier(score, name):
+def calculate_modifier(score):
     """
     Return tuple of ability score in the form (score, modifier).
-    TODO: Can I return a dictionary in the form {'ability name': (score, modifier)}?
     """
     # If the monster does not have this ability score, it doesn't have a modifier.
     # However, the modifier must be set to zero to be able to calculate with it.
     # In the template, however, a score of - shouldn't be accompanied by a modifier at all.
     # Those who do not live, do not have constitution scores
-    if score == "-" or score == 0:
-        ability = {name: ("-", 0)}
+    if score == 0:
+        ability = ("-", 0)
     else:
-        # If ability scores don't exist because they haven't been entered yet (or entered incorrectly), set score to 10
-        try:
-            score = int(score)
-            if score < 0:
-                score = 10
-            modifier = floor((score - 10) / 2)
-            ability = {name: (score, modifier)}
-        # Do not specify type of error
-        except:
-            # This will work for now. TODO: see if it can be done more elegantly later
-            ability = {name: ("", 0)}
+        modifier = floor((score - 10) / 2)
+        ability = (score, modifier)
     return ability
 
-def calculate_save(quality, hd):
+def calculate_save(quality, hd, feat):
     if quality == "good":
         save = round(((hd+3)/2), ndigits=None)
     elif quality == "poor":
@@ -43,14 +34,9 @@ def calculate_save(quality, hd):
             save = 0
     else:
         save = 0
+    if feat:
+        save += 2
     return save
-
-"""def validate_speed(speed):
-    if speed:
-        speed = int(speed)
-    else:
-        speed = 0
-    return speed"""
 
 def monster_builder(request):
     ''''''
@@ -101,11 +87,43 @@ def monster_builder(request):
     medium_armor = Armor.objects.filter(weight='medium').order_by('armor_bonus')
     heavy_armor = Armor.objects.filter(weight='heavy').order_by('armor_bonus')
     shields = Armor.objects.filter(weight='shield').order_by('armor_bonus')
-    special = SpecialAbility.objects.all()
+    special = SpecialAbility.objects.all().order_by('name')
     return render(request, 'blog/monsterbuilderV4.html', {
             'monstertypes': monstertypes, 'melee_weapons': melee_weapons, 'ranged_weapons': ranged_weapons,
             'skills': skills, 'light_armor': light_armor, 'medium_armor': medium_armor, 'heavy_armor': heavy_armor,
             'shields': shields, 'feats' : feats, 'special': special, 'form': form})
+
+class MonsterList(ListView):
+    model = Monster
+    template_name = 'monsterbuilder/monsterlist.html'
+    context_object_name = "monsters"
+
+def monster_statblock(request, pk):
+    monster = get_object_or_404(Monster, pk=pk)
+    # Ability Scores and Modifiers
+    monster.strength = calculate_modifier(monster.strength)
+    if monster.manufactured_armor.max_dex & monster.dexterity>monster.manufactured_armor.max_dex:
+        monster.dexterity = calculate_modifier(monster.manufactured_armor.max_dex)
+    else:
+        monster.dexterity = calculate_modifier(monster.dexterity)
+    monster.constitution = calculate_modifier(monster.constitution)
+    monster.intelligence = calculate_modifier(monster.intelligence)
+    monster.wisdom = calculate_modifier(monster.wisdom)
+    monster.charisma = calculate_modifier(monster.charisma)
+    # TODO: how to check if ManyToManyField has relationship with specific entry?
+    monster.fortitude_save = calculate_save(monster.fortitude, monster.hd_number, False)
+    monster.reflex_save = calculate_save(monster.reflex, monster.hd_number, False)
+    monster.will_save = calculate_save(monster.will, monster.hd_number, False)
+    # if feats include Improved Initative
+    # monster.initiative = monster.dexterity[1] + 4
+    # else
+    monster.initiative = monster.dexterity[1]
+    monster.bab = floor(monster.hd_number * monster.monstertype.atk_as)
+    # TODO: filter qualities and attacks
+    monster.special_qualities = monster.special_abilities
+    monster.special_attacks = monster.special_abilities 
+    return render(request, 'monsterbuilder/d20srd_stat.html', {'monster' : monster})
+
 
 def monster_builder_api_monstertype(request):
     if request.method == "GET":
