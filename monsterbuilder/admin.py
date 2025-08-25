@@ -2,7 +2,10 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Skill, Weapon, Armor, Feat, SpecialAbility, MonsterType
+from .models import Skill, Weapon, Armor, Feat, SpecialAbility, MonsterType, Monster
+
+class MonsterAdmin(admin.ModelAdmin):
+    list_display = ('name',)
 
 class MonsterTypeAdmin(admin.ModelAdmin):
     list_display = ('name', 'hd_type', 'atk_as', 'fortitude', 'reflex', 'will',
@@ -27,7 +30,7 @@ class FeatAdmin(admin.ModelAdmin):
         return ['name']
 
 class WeaponAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'damage', 'size', 'atk_form', 'proficiency')
+    list_display = ('name', 'damage', 'size', 'atk_form', 'proficiency', 'crit_range', 'crit_double')
     list_filter = ('atk_form', 'proficiency', 'size')
 
     def get_ordering(self, request):
@@ -53,3 +56,4 @@ admin.site.register(Weapon, WeaponAdmin)
 admin.site.register(Armor, ArmorAdmin)
 admin.site.register(SpecialAbility, SpecialAbilityAdmin)
 admin.site.register(MonsterType, MonsterTypeAdmin)
+admin.site.register(Monster, MonsterAdmin)

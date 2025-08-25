@@ -44,6 +44,16 @@ ARMOR_WEIGHT = [
     ("heavy", "Heavy"),
     ("shield", "Shield")
 ]
+ATTACK_FORM = [
+    ("melee", "Melee"),
+    ("ranged", "Ranged"),
+    ("thrown", "Thrown"),
+]
+PROFICIENCY = [
+    ("simple", "Simple"),
+    ("martial", "Martial"),
+    ("exotic", "Exotic"),
+]
 SAVE_QUALITY = [
     ("good", "Good"),
     ("poor", "Poor"),
@@ -53,11 +63,6 @@ SAVING_THROWS = [
     ("FORT", "Fortitude"),
     ("REF", "Reflex"),
     ("WILL", "Will")
-]
-ATTACK_FORM = [
-    ("melee", "Melee"),
-    ("ranged", "Ranged"),
-    ("thrown", "Thrown"),
 ]
 SAVE_EFFECT = [
     ("negates", "Negates"),
@@ -95,9 +100,10 @@ class Monster(models.Model):
     hd_number = models.FloatField(blank=False, null=False)
     bonus_hp = models.IntegerField(blank=True, default=0)
     monstertype = models.ForeignKey('monsterbuilder.MonsterType', on_delete=models.PROTECT, related_name="+", blank=False, null=False)
-    subtypes = models.ManyToManyField('monsterbuilder.MonsterSubType')
+    subtypes = models.ManyToManyField('monsterbuilder.MonsterSubType', blank=True)
     size = models.IntegerField(choices=SIZE_MODIFIERS, default=0)
     reach = models.IntegerField(choices=SIZE_MODIFIERS, default=0)
+# space
 
     # Ability Scores
     # The modifier does not have to be stored in the model. It's easily calculated from the score.
@@ -134,20 +140,27 @@ class Monster(models.Model):
     deflection_bonus = models.IntegerField(default=0)
     # natural, manufactured, deflection bonus
 
-    skills = models.ManyToManyField('monsterbuilder.Skill', through="SkillRanks")
+    skills = models.ManyToManyField('monsterbuilder.Skill', through="SkillRanks", blank=True)
     feats = models.ManyToManyField('monsterbuilder.Feat', through="FeatDetails")
     special_abilities = models.JSONField(null=True, blank=True)
 
+    # I have spells
+    spells_at_will = models.JSONField(blank=True, null=True)
+    spells_once_per_day = models.JSONField(blank=True, null=True)
+    spells_thrice_per_day = models.JSONField(blank=True, null=True)
+    spells_once_per_week = models.JSONField(blank=True, null=True)
+    psionic_powers = models.JSONField(blank=True, null=True)
+
     climate = models.CharField(max_length=4, choices=TEMPERATURE, default="Any")
     terrain = models.CharField(max_length=11, choices=TERRAIN, default="Any")
-    plane = models.TextField(null=True)
-    organization = models.TextField(null=True)
-    challenge_rating = models.FloatField(null=True)
-    treasure = models.TextField(null=True)
-    alignment = models.TextField(null=True)
-    advancement = models.TextField(null=True)
-    monster_appearance = models.TextField(null=True)
-    monster_description = models.TextField(null=True)
+    plane = models.TextField(null=True, blank=True)
+    organization = models.TextField(null=True, blank=True)
+    challenge_rating = models.FloatField(null=True, blank=True)
+    treasure = models.TextField(null=True, blank=True)
+    alignment = models.TextField(null=True, blank=True)
+    advancement = models.TextField(null=True, blank=True)
+    monster_appearance = models.TextField(null=True, blank=True)
+    monster_description = models.TextField(null=True, blank=True)
     #author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     #created_at = models.DateTimeField(auto_now_add=True)
     #updated_at = models.DateTimeField(auto_now=True)
@@ -181,7 +194,7 @@ class MonsterSubType(models.Model):
 
 
 class Skill(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=30)
     modifier = models.CharField(max_length=3, choices=ABILITY_SCORES)
     # If you have 5+ ranks in this skill, you get a +2 synergy bonus in all its synergistic skills.
     # The synergy column contains the skills that receive a bonus if the entry's skill has 5 ranks.
@@ -201,7 +214,7 @@ class SkillRanks(models.Model):
 
 # Feats
 class Feat(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=30)
     # Proficienies as feats or as separate thing?
     # prerequisites list of dicionaries {kind: feat/ability/base attack bonus/class,
     # which: feat/class/ability minimum: ability/spellcaster level/base attack bonus/character level}
@@ -223,7 +236,6 @@ class FeatDetails(models.Model):
     details = models.TextField(default="")
 
 class SpecialAbility(models.Model):
-    # TODO: re-add saves
     name = models.CharField(max_length=30, unique=True)
     description = models.TextField(null=True, blank=True)
     shorthand = models.CharField(null=True, blank=True, max_length=30)
@@ -231,6 +243,9 @@ class SpecialAbility(models.Model):
     save_effect = models.CharField(max_length=7, null=True, blank=True, choices=SAVE_EFFECT)
     save_ability = models.CharField(max_length=3, choices=ABILITY_SCORES, null=True, blank=True)
     category = models.CharField(max_length=15, choices=CATEGORY)
+
+    class Meta:
+      verbose_name_plural = "special abilities"
 
     def __str__(self):
          return (f"{self.name} ({self.description}, {self.shorthand}, {self.category}"
@@ -245,16 +260,14 @@ class Weapon(models.Model):
     size = models.IntegerField(choices=SIZE_MODIFIERS)
     damage = models.CharField(max_length=10)
     atk_form = models.CharField(max_length=6, choices=ATTACK_FORM)
-    proficiency = models.CharField(max_length=7)
-    # TODO: Add crit ranges and doubles
-    # TODO: Reach/Range
+    proficiency = models.CharField(max_length=7, choices=PROFICIENCY)
+    # TODO: Add crit doubles
+    # TODO: Reach
     # Number of numbers on which a weapon threatens a crit
-    crit_range = models.IntegerField(default=1)
+    crit_range = models.IntegerField(default=1, verbose_name="critical threat range")
     crit_double = models.CharField(max_length=5, default='✕2')
     range_increment = models.IntegerField(default=0)
     reach = models.BooleanField(default=False)
-    double = models.BooleanField(default=False)
-
 
     def __str__(self):
          return f"{self.name} ({self.damage}, {self.size}, {self.atk_form}, {self.proficiency})"
@@ -263,7 +276,7 @@ class Armor(models.Model):
     name = models.CharField(max_length=30, unique=True)
     weight= models.CharField(max_length=6)
     armor_bonus = models.IntegerField()
-    max_dex = models.IntegerField(null=True)
+    max_dex = models.IntegerField(null=True, verbose_name="maximum dexterity bonus")
     armor_penalty = models.IntegerField()
     arcane_failure = models.IntegerField()
 

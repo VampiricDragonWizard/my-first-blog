@@ -1,22 +1,25 @@
 <!-- Monster Stat Block in style of Justin Alexander (short version) -->
+{% extends "blog/base.html" %}
 {% comment %}List of data view needs to send to this template: [monster.name, monster.cr, monster.alignment, monster.size, monster.type, monster.subtype, monster.initiative, monster.hp_average, monster.HD_number, monster.HD_type monster.ac, monster.ac_touch, monster.ac_flat {% endcomment %}
+{% load statblockfilters %}
+{% block content %}
 <h1>{{ monster.name }}</h1>
 <aside>CR {{ monster.cr }}</aside>
-{{ monster.alignment }} {{ monster.size }} {{ monster.type }} {{ monster.subtype }}<br>
+{{ monster.alignment }} {{ monster.display_size|title }} {{ monster.monstertype.name|title }} {{ monster.subtype }}<br>
 <strong>Senses:</strong> <!-- monster special qualities senses -->, Listen +#, Spot +#<br>
-<strong>Init:<strong> {{ monster.intiative }} (modifiers)<br>
+<strong>Init:</strong> {{ monster.intiative }} (Dex {{ monster.dexterity.1|add_modifier_sign }}{% comment %}{% if feats.includes("Improved Initiative") %} Improved Initiative +4{% endif %}{% endcomment%})<br>
 <strong>Aura:</strong> <br>
 <strong>Languages:</strong> <br>
 <br>
-<strong>AC:</strong> { monster.ac }}, touch {{ monster.ac_touch }}, {{ monster.ac_flat }} (({{ monster.armor }}))<br>
+<strong>AC:</strong> {{ monster.ac }}, touch {{ monster.ac_touch }}, {{ monster.ac_flat }} (({{ monster.armor }}))<br>
 <strong>Hit Points:</strong> {{ monster.hp_average }}
-<aside><strong>HD:</strong> {{ monster.HD_number }}d{{ monster.HD_type }}</aside><br>
+<aside><strong>HD:</strong> {{ monster.hd_number }}d{{ monster.monstertype.hd_type }}</aside><br>
 <strong>Miss Chance:</strong> <br>
 <strong>DR:</strong> <br>
-<strong>Immune:</strong> <br>
-<strong>Resist:</strong> <br>
-<strong>Fort</strong> {% if monster.fortitude >= 0 %}+{% endif %}{{ monster.fortitude }}, <strong>Ref</strong> {% if monster.reflex >= 0 %}+{% endif %}{{ monster.reflex }}, <strong>Will</strong> {% if monster.will >= 0 %}+{% endif %}{{ monster.will }}<br>
-<strong>Weakness:</strong> <br>
+<strong>Immune:</strong> {% for immunity in monster.immunities %}{{ immunity.shorthand }}, {% endfor %}<br>
+<strong>Resist:</strong> {% for resistance in monster.resistances %}{{ resistance.shorthand }}, {% endfor %}<br>
+<strong>Fort</strong> {{ monster.fortitude_save|add_modifier_sign }}, <strong>Ref</strong> {{ monster.reflex_save|add_modifier_sign }}, <strong>Will</strong> {{ monster.will_save|add_modifier_sign }}<br>
+<strong>Weakness:</strong> {% for vulnerability in monster.vulnerabilities %}{{ vulnerability.shorthand }}, {% endfor %}<br>
 <strong>Speed:</strong> {{ monster.speed }} ft.<br>
 <strong>Melee:</strong> {{ monster.attack }} <!-- Only melee --><br>
 <strong>Ranged:</strong> {{ monster.attack }} <!-- Only ranged --><br>
@@ -43,14 +46,16 @@
 <br>
 <strong>Spell-Like Abilities</strong> (CL #)
 <ul>
-  <li>1/day</li>
-  <li>At will</li>
+  {% for spell in monster.spells_once_per_week %}{% if forloop.first %}<li>1/week {% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
+  {% for spell in monster.spells_thrice_per_day %}{% if forloop.first %}<li>3/day{% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
+  {% for spell in monster.spells_once_per_day %}{% if forloop.first %}<li>1/day{% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
+  {% for spell in monster.spells_at_will %}{% if forloop.first %}<li>At will{% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
 </ul>
 <br>
 <strong>Str</strong> {{ monster.strength }}, <strong>Dex</strong> {{ monster.dexterity }}, <strong>Con</strong> {{ monster.constitution }}, <strong>Int</strong> {{ monster.intelligence }}, <strong>Wis</strong> {{ monster.wisdom }}, <strong>Cha</strong> {{ monster.charisma }}<br>
-<strong>Special Qualities:</strong> {{ monster.qualities_special }}<br>
+<strong>Special Qualities:</strong> {% for quality in monster.special_qualities %}{{ quality.shorthand }}, {% endfor %}<br>
 <strong>Feats:</strong> {{ monster.feats }}<br>
-<strong>Skills:</strong>{% for skill in skills %} {{ skill.name }} {% if skill.modifier >= 0 %}+{% endif %}{{ skill.modifier }}{% endfor %}<br>
+<strong>Skills:</strong>{% for skill in skills %} {{ skill.name }} {{ skill.modifier|add_modifier_sign }}{% endfor %}<br>
 <strong>Advancement:</strong> {{ monster.advancement }}<br>
 <strong>Level Adjustment:</strong> {{ monster.lvl_adj }}<br>
 <strong>Possessions:</strong> {{ monster.treasure }}
@@ -58,26 +63,26 @@
 <hr>
 <h1>Short Version</h1>
 <strong>{{ monster.name|upper }} (CR {{ monster.cr }})</strong> &#8211; {{ monster.alignment }} {{ monster.size }} {{ monster.type }} ({{ monster.subtype }})<br>
-<strong>DETECTION</strong> <!-- monster special qualities senses -->, Listen +#, Spot +#; 
+<strong>DETECTION</strong> {% for sense in monster.senses %}{{ sense }}, {% endfor %}Listen +#, Spot +#; 
 <strong>Init</strong> {{ monster.intiative }}; <strong>Aura</strong> ; <strong>Languages:</strong> <br>
-<strong>DEFENSES &#8211; AC:</strong> { monster.ac }}, touch {{ monster.ac_touch }}, flat-footed { monster.ac_flat }}; 
-<strong>hp</strong> {{ monster.hp_average }} ({{ monster.HD_number }}d{{ monster.HD_type }}); 
+<strong>DEFENSES &#8211; AC:</strong> {{ monster.ac }}, touch {{ monster.ac_touch }}, flat-footed {{ monster.ac_flat }}; 
+<strong>hp</strong> {{ monster.hp_average }} ({{ monster.hd_number }}d{{ monster.monstertype.hd_type }}); 
 <strong>Miss</strong> ; <strong>DR</strong> ; 
-<strong>Immune:</strong> ; <strong>Resist:</strong> ; <strong>Weakness:</strong> <br>
+<strong>Immune:</strong> {% for immunity in monster.immunities %}{{ immunity.shorthand }}, {% endfor %}; <strong>Resist:</strong> {% for resistance in monster.resistances %}{{ resistance.shorthand }}, {% endfor %}; <strong>Weakness:</strong> {% for vulnerability in monster.vulnerabilities %}{{ vulnerability.shorthand }}, {% endfor %}<br>
 <strong>ACTIONS &#8211; Speed:</strong> {{ monster.speed }} ft.
-<strong>Melee</strong> {{ for attack in monster.melee_attacks }}
-  {% if="attack.number>1" %}{{ attack.number }} {% endif %}
-  {{ attack.atk_name }} {{ attack.atk_bonus|add_modifier_sign }} (
-  {% if attack.weapon_damage %}{{ attack.weapon_damage }} {{  attack.damage_bonus|add_modifier_sign }}{% endif %}
-  {% if attack.special_effect" %} plus {{ attack.special_effect }}{% endif %}
+<strong>Melee</strong> {% for attack in monster.melee_attacks %}
+  {% if attack.number > 1 %}{{ attack.number }} {% endif %}
+  {{ attack.atk_name }} {% comment %} attack.atk_bonus|add_modifier_sign {% endcomment %} (
+  {% if attack.weapon_damage %}{{ attack.weapon_damage }} {% comment %} attack.damage_bonus|add_modifier_sign {% endcomment %}{% endif %}
+  {% if attack.special_effect %} plus {{ attack.special_effect }}{% endif %}
   ){% endfor %}<br>
-<strong>Ranged</strong> {{ monster.attack }} <!-- Only ranged --><br>
+<strong>Ranged</strong> {% for attack in monster.ranged_attacks %}{{ monster.attack }} {% endfor %}<!-- Only ranged --><br>
 <strong>Space</strong> {{ monster.space }} ft.
 <aside><strong>Reach</strong> {{ monster.reach }} ft.</aside><br>
 <strong>Base Atk</strong> {{ monster.bab }}
 <aside><strong>Grapple:</strong> {{ monster.grapple }}</aside><br>
 <strong>Atk Options:</strong><!-- monster.armor would be a list of attacks ex. <weapon> +x melee/ranged (1dy+z/a) --> {{ monster.attack }}<br>
-<strong>Special Actions:</strong>{{ monster.attacks_special }}<br>
+<strong>Special Actions:</strong>{% for attack in monster.special_attacks %}{{ attack.name }}, {% endfor %}<br>
 <strong>Combat Feats:</strong> <br>
 <strong>Combat Gear:</strong> <br>
 <br>
@@ -95,17 +100,18 @@
 <br>
 <strong>Spell-Like Abilities</strong> (CL #)
 <ul>
-  <li>1/day</li>
-  <li>At will</li>
+  {% for spell in monster.spells_once_per_week %}{% if forloop.first %}<li>1/week {% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
+  {% for spell in monster.spells_thrice_per_day %}{% if forloop.first %}<li>3/day{% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
+  {% for spell in monster.spells_once_per_day %}{% if forloop.first %}<li>1/day{% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
+  {% for spell in monster.spells_at_will %}{% if forloop.first %}<li>At will{% endif %}<i>{{ spell }}</i>{% if forloop.last %}</li>{% endif %}{% endfor %}
 </ul>
 <br>
 <strong>Str</strong> {{ monster.strength }}, <strong>Dex</strong> {{ monster.dexterity }}, <strong>Con</strong> {{ monster.constitution }}, <strong>Int</strong> {{ monster.intelligence }}, <strong>Wis</strong> {{ monster.wisdom }}, <strong>Cha</strong> {{ monster.charisma }}<br>
 <strong>Fort</strong> {{ monster.fortitude|add_modifier_sign }}, <strong>Ref</strong> {{ monster.reflex|add_modifier_sign }}, <strong>Will</strong> {{ monster.will|add_modifier_sign }}<br>
-<strong>Special Qualities:</strong> {{ monster.qualities_special }}<br>
+<strong>Special Qualities:</strong> {% for quality in monster.special_qualities %}{{ quality.shorthand }}, {% endfor %}<br>
 <strong>Feats:</strong> {{ monster.feats }}<br>
-<strong>Skills:</strong>{% for skill in skills %} {{ skill.name }} {% if skill.modifier >= 0 %}+{% endif %}{{ skill.modifier }}{% endfor %}<br>
+<strong>Skills:</strong>{% for skill in skills %} {{ skill.name }} {{ skill.modifier|add_modifier_sign }}{% endfor %}<br>
 <strong>Advancement:</strong> {{ monster.advancement }}<br>
 <strong>Level Adjustment:</strong> {{ monster.lvl_adj }}<br>
 <strong>Possessions:</strong> {{ monster.treasure }}
-
-
+{% endblock %}

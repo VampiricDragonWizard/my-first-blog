@@ -47,26 +47,76 @@ def monster_builder(request):
         """
         print("Validating form")
         form = MonsterForm(request.POST)
+        # TODO: 'MonsterForm' object has no attribute 'cleaned_data'
         if form.is_valid:
-            # TODO: form is valid when it shouldn't be (monstertype)
             print("Form is valid")
-            try:
-                # Can probably just create monster as form, its a dictionary
-                monster = form.save(commit=False)
-                # Calculate Hit Dice Number
-                if form.cleaned_data["hd_fraction"]:
-                    monster.hd_number = float(1/form.cleaned_data["hd_number"])
-                else:
-                    monster.hd_number = float(form.cleaned_data["hd_number"])
-                if request.POST['action'] == 'save':
-                    monster.save()
-                    return HttpResponse("OK")
-                elif request.POST['action'] == 'show':
-                    return render(request, 'monsterbuilder/alexandrian_stat.html', {'monster': monster})
-                else:
-                    return HttpResponse("Invalid action")
-            except:
-                print("failed to create monster")
+            # TODO:
+            monster = Monster(
+                name = form.cleaned_data["name"],
+                hd_number = form.cleaned_data["hd_number"],
+                bonus_hp = form.cleaned_data["bonus_hp"],
+                monstertype = form.cleaned_data["monstertype"],
+                size = form.cleaned_data["size"],
+                reach = form.cleaned_data["reach"],
+                strength = form.cleaned_data["strength"],
+                dexterity = form.cleaned_data["dexterity"],
+                consitution = form.cleaned_data["consitution"],
+                intelligence = form.cleaned_data["intelligence"],
+                wisdom = form.cleaned_data["wisdom"],
+                charisma = form.cleaned_data["charisma"],
+                fortitude = form.cleaned_data["fortitude"],
+                reflex = form.cleaned_data["reflex"],
+                will = form.cleaned_data["will"],
+                speed = form.cleaned_data["speed"],
+                speed_burrow = form.cleaned_data["burrow_speed"],
+                speed_climb = form.cleaned_data["climb_speed"],
+                speed_fly = form.cleaned_data["fly_speed"],
+                speed_fly_maneuverability = form.cleaned_data["fly_maneuverability"],
+                speed_swim = form.cleaned_data["swim_speed"],
+                attacks = form.cleaned_data["attacks"],
+                natural_armor = form.cleaned_data["natural_armor"],
+                manufactured_armor = form.cleaned_data["manufactured_armor"],
+                shield = form.cleaned_data["worn_shield"],
+                deflection_bonus = form.cleaned_data["deflection_bonus"],
+                special_abilities = form.cleaned_data["special_abilities"],
+                spells_at_will = form.cleaned_data["spells_at_will"],
+                spells_once_per_day = form.cleaned_data["spells_once_per_day"],
+                spells_thrice_per_day = form.cleaned_data["spells_thrice_per_day"],
+                spells_once_per_week = form.cleaned_data["spells_once_per_week"],
+                psionic_powers = form.cleaned_data["psionic_powers"],
+                climate = form.cleaned_data["climate"],
+                terrain = form.cleaned_data["terrain"],
+                plane = form.cleaned_data["plane"],
+                organization = form.cleaned_data["organization"],
+                challenge_rating = form.cleaned_data["challenge_rating"],
+                treasure = form.cleaned_data["treasure"],
+                alignment = form.cleaned_data["alignment"],
+                advancement = form.cleaned_data["advancement"],
+                monster_appearance = form.cleaned_data["monster_appearance"],
+                monster_description = form.cleaned_data["monster_description"],
+            )
+            # subtypes
+            # skills
+                # for skill in skills:
+                    # if skill not in Skill model, add it to model
+                        # s1 = Skill(name=skill.skill_name, modifier=skill.modifier)
+                        # s1.save()
+                    # create through table entry
+                    # skillranks1 = SkillRanks(monster=monster, skill=skill from Skill model, ranks=skill.ranks, racial_bonus=skill.racial_bonus)
+                    # skillranks1.save()
+            # feats
+                # for feat in feats:
+                    # featdetails1 = FealDetails(monster=monster, feat=feat from Feat model, detail=feat.detail)
+                    # featdetails1.save()
+            # monster.save()
+            print("monster is saved")
+            return HttpResponse("OK")
+            if request.POST['action'] == 'show':
+                print("showing monster")
+                return render(request, 'monsterbuilder/alexandrian_stat.html', {'monster': monster})
+            else:
+                return HttpResponse("Invalid action")
+            #print("failed to create monster")
         else:
             print(form.errors)
             return HttpResponse(form.errors)
@@ -100,10 +150,24 @@ class MonsterList(ListView):
 
 def monster_statblock(request, pk):
     monster = get_object_or_404(Monster, pk=pk)
+    #if source == "d20srd":
+    #    template = "monsterbuilder/d20srd_stat.html"
+    #    # Following section only applies to d20srd
+    #    monster.manufactured_attacks = list(filter(lambda attack: attack["nature"] == 'manufactured', monster.attacks))
+    #    natural_attacks = list(filter(lambda attack: attack["nature"] == 'natural', monster.attacks))
+    #    monster.primary_natural_attacks = list(filter(lambda attack: attack["group"] == 'primary', natural_attacks))
+    #    monster.secondary_natural_attacks = list(filter(lambda attack: attack["group"] == 'secondary', natural_attacks))
+    #elif source == "Alexandrian":
+    template = "monsterbuilder/alexandrian_stat.html"
+    monster.melee_attacks = list(filter(lambda attack: attack["form"]=="melee", monster.attacks))
+    monster.ranged_attacks = list(filter(lambda attack: attack["form"]=="ranged" or attack["form"]=="thrown", monster.attacks))
+   # else:
+    #    return HttpResponse("404")
     # Ability Scores and Modifiers
     monster.strength = calculate_modifier(monster.strength)
-    if monster.manufactured_armor.max_dex & monster.dexterity>monster.manufactured_armor.max_dex:
-        monster.dexterity = calculate_modifier(monster.manufactured_armor.max_dex)
+    if monster.manufactured_armor:
+        if monster.manufactured_armor.max_dex & monster.dexterity>monster.manufactured_armor.max_dex:
+            monster.dexterity = calculate_modifier(monster.manufactured_armor.max_dex)
     else:
         monster.dexterity = calculate_modifier(monster.dexterity)
     monster.constitution = calculate_modifier(monster.constitution)
@@ -118,11 +182,30 @@ def monster_statblock(request, pk):
     # monster.initiative = monster.dexterity[1] + 4
     # else
     monster.initiative = monster.dexterity[1]
+    monster.display_size = monster.get_size_display()
+    monster.hp_modifier = monster.constitution[1] * monster.hd_number + monster.bonus_hp
+    monster.hp_average = floor(((monster.monstertype.hd_type/2)+monster.hp_modifier)*monster.hd_number)
+    monster.ac_touch = 10 + monster.deflection_bonus + monster.dexterity[1] + monster.size
+    monster.ac = monster.ac_touch + monster.natural_armor
+    if monster.manufactured_armor:
+        monster.ac += monster.manufactured_armor.armor_bonus
+    if monster.shield:
+        monster.ac += monster.shield.armor_bonus
+    monster.ac_flat = monster.ac - monster.dexterity[1]
     monster.bab = floor(monster.hd_number * monster.monstertype.atk_as)
+    monster.grapple = monster.bab + monster.strength[1] + monster.size * -4
+
+
+    # monster.armor, monster.space, monster.casterlevelspells
     # TODO: filter qualities and attacks
-    monster.special_qualities = monster.special_abilities
-    monster.special_attacks = monster.special_abilities 
-    return render(request, 'monsterbuilder/d20srd_stat.html', {'monster' : monster})
+    if monster.special_abilities:
+        monster.senses = list(filter(lambda ability: ability["category"]=="sense", monster.special_abilities))
+        monster.immunities = list(filter(lambda ability: ability["category"]=="immunity", monster.special_abilities))
+        monster.resistance = list(filter(lambda ability: ability["category"] == "resistance", monster.special_abilities))
+        monster.vulnerabilities = list(filter(lambda ability: ability["category"] == "vulnerability", monster.special_abilities))
+        monster.special_attacks = list(filter(lambda ability: ability["category"]=="attack", monster.special_abilities))
+        monster.environment = monster.get_climate_display() + ' ' + monster.get_terrain_display()
+    return render(request, template, {'monster' : monster})
 
 
 def monster_builder_api_monstertype(request):

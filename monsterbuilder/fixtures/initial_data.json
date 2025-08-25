@@ -1,0 +1,470 @@
+[
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 13,
+		"fields": {
+			"name": "Alchemy",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 15,
+		"fields": {
+			"name": "Appraise",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 16,
+		"fields": {
+			"name": "Autohypnosis",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 17,
+		"fields": {
+			"name": "Balance",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 19,
+		"fields": {
+			"name": "Climb",
+			"modifier": "STR",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 20,
+		"fields": {
+			"name": "Climb",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 21,
+		"fields": {
+			"name": "Concentration",
+			"modifier": "CON",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 22,
+		"fields": {
+			"name": "Craft",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 24,
+		"fields": {
+			"name": "Diplomacy",
+			"modifier": "CHA",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 25,
+		"fields": {
+			"name": "Disable Device",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 26,
+		"fields": {
+			"name": "Disguise",
+			"modifier": "CHA",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 27,
+		"fields": {
+			"name": "Escape Artist",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 28,
+		"fields": {
+			"name": "Forgery",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 29,
+		"fields": {
+			"name": "Gather Information",
+			"modifier": "CHA",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 31,
+		"fields": {
+			"name": "Heal",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 32,
+		"fields": {
+			"name": "Hide",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 33,
+		"fields": {
+			"name": "Innuendo",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 34,
+		"fields": {
+			"name": "Intimidate",
+			"modifier": "CHA",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 35,
+		"fields": {
+			"name": "Intuit Direction",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 36,
+		"fields": {
+			"name": "Jump",
+			"modifier": "STR",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 37,
+		"fields": {
+			"name": "Knowledge",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 38,
+		"fields": {
+			"name": "Listen",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 39,
+		"fields": {
+			"name": "Move Silently",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 40,
+		"fields": {
+			"name": "Open Lock",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 41,
+		"fields": {
+			"name": "Perform",
+			"modifier": "CHA",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 42,
+		"fields": {
+			"name": "Pick Pocket",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 18,
+		"fields": {
+			"name": "Bluff",
+			"modifier": "CHA",
+			"synergy": [
+				24,
+				26,
+				33,
+				34,
+				42
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 43,
+		"fields": {
+			"name": "Profession",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 44,
+		"fields": {
+			"name": "Psicraft",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 45,
+		"fields": {
+			"name": "Read Lips",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 46,
+		"fields": {
+			"name": "Remote View",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 47,
+		"fields": {
+			"name": "Ride",
+			"modifier": "DEX",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 30,
+		"fields": {
+			"name": "Handle Animal",
+			"modifier": "CHA",
+			"synergy": [
+				34
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 14,
+		"fields": {
+			"name": "Animal Empathy",
+			"modifier": "CHA",
+			"synergy": [
+				30
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 48,
+		"fields": {
+			"name": "Scry",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 49,
+		"fields": {
+			"name": "Search",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 50,
+		"fields": {
+			"name": "Sense Motive",
+			"modifier": "WIS",
+			"synergy": [
+				24,
+				33
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 51,
+		"fields": {
+			"name": "Spellcraft",
+			"modifier": "INT",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 52,
+		"fields": {
+			"name": "Spot",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 53,
+		"fields": {
+			"name": "Stabilize Self",
+			"modifier": "CON",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 54,
+		"fields": {
+			"name": "Swim",
+			"modifier": "STR",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 55,
+		"fields": {
+			"name": "Tumble",
+			"modifier": "DEX",
+			"synergy": [
+				17,
+				36
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 36,
+		"fields": {
+			"name": "Jump",
+			"modifier": "STR",
+			"synergy": [
+				55
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 56,
+		"fields": {
+			"name": "Use Magic Device",
+			"modifier": "CHA",
+			"synergy": [
+				51
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 51,
+		"fields": {
+			"name": "Spellcraft",
+			"modifier": "INT",
+			"synergy": [
+				56
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 23,
+		"fields": {
+			"name": "Decipher Script",
+			"modifier": "INT",
+			"synergy": [
+				56
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 57,
+		"fields": {
+			"name": "Use Psionic Device",
+			"modifier": "CHA",
+			"synergy": []
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 58,
+		"fields": {
+			"name": "Use Rope",
+			"modifier": "DEX",
+			"synergy": [
+				20,
+				27
+			]
+		}
+	},
+	{
+		"model": "monsterbuilder.skill",
+		"pk": 59,
+		"fields": {
+			"name": "Wilderness Lore",
+			"modifier": "WIS",
+			"synergy": []
+		}
+	}
+]

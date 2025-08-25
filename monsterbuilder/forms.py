@@ -1,13 +1,12 @@
 from urllib import request
 
 from django import forms
-from .models import MonsterType, Armor
+from .models import MonsterType, Armor, SIZE_MODIFIERS
 
 # Note SIZE_MODIFIERS_FOR_CHOICES and ABILITY_SCORES_FOR_CHOICES
 class MonsterForm(forms.Form):
     """ Add a monster to the database """
-    monster_name = forms.CharField(max_length=50)
-    action_button = forms.ChoiceField(choices=['save', 'show'])
+    name = forms.CharField(max_length=50)
     monstertype = forms.ModelChoiceField(queryset=MonsterType.objects.all(), to_field_name='name')
     # Note that a monstertype added via admin wont't show up here, so the form will consider it invalid. ModelChoiceField
     #monstersubtype = forms.ModelMultipleChoiceField(queryset=MonsterType.objects.all(), to_field_name='name', required=False)
@@ -72,6 +71,17 @@ class MonsterForm(forms.Form):
     monster_appearance = forms.CharField(required=False)
     monster_description = forms.CharField(required=False)
 
+    # TODO:
     def clean(self):
-        # TODO: this section
-        pass
+        cleaned_data = super().clean()
+
+        # Hit Dice
+        if cleaned_data.get("hd_fraction"):
+            hd_number = float(1/cleaned_data.get("hd_number"))
+        else:
+            hd_number = float(cleaned_data.get("hd_number"))
+        print("HD calculated")
+        # Skills
+        # skill name is not allowed to be longer than 30 char
+        # Feats
+        # split into feat from Feat model and feat detail
