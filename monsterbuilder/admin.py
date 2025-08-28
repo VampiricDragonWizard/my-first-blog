@@ -44,8 +44,8 @@ class ArmorAdmin(admin.ModelAdmin):
         return ['weight', 'armor_bonus']
 
 class SpecialAbilityAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'shorthand', 'description', 'save_type', 'save_effect', 'save_ability', 'category')
-    list_filter = ['category', 'save_type']
+    list_display = ('name', 'shorthand', 'description', 'category')
+    list_filter = ['category']
 
     def get_ordering(self, request):
         return ['category', 'name']

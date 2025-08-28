@@ -153,7 +153,7 @@ Combat Reflexes (1+DEX mod AOOs)
 Extra Turning (turning * 4)
 Improved Critical (double threat range)
 Mobility (+4 AC vs AOO)
-Spell focus (+2 DC chosen school of magic
+Spell focus (+2 DC chosen school of magic)
 Spell Mastery
 Two-Weapon Fighting (reduces penalties by 2)
 Weapon Finesse (light, rapier, spiked chain, shield's acp applies)

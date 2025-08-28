@@ -1,7 +1,7 @@
 from urllib import request
 
 from django import forms
-from .models import MonsterType, Armor, SIZE_MODIFIERS
+from .models import MonsterType, Armor, Skill, Feat, SIZE_MODIFIERS
 
 # Note SIZE_MODIFIERS_FOR_CHOICES and ABILITY_SCORES_FOR_CHOICES
 class MonsterForm(forms.Form):
@@ -75,13 +75,19 @@ class MonsterForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
 
-        # Hit Dice
-        if cleaned_data.get("hd_fraction"):
-            hd_number = float(1/cleaned_data.get("hd_number"))
-        else:
-            hd_number = float(cleaned_data.get("hd_number"))
-        print("HD calculated")
         # Skills
-        # skill name is not allowed to be longer than 30 char
+        for skill in cleaned_data.get("skills"):
+            skill.name = forms.ModelChoiceField(queryset=Skill.objects.get(modifier=skill.modifier), to_field_name='name')
         # Feats
-        # split into feat from Feat model and feat detail
+        cleaned_data.feat_list = []
+        for feat in cleaned_data.get("feats"):
+            x = feat.split('(')
+            if x.length == 2:
+                x[0].strip()
+                x[0] = forms.ModelChoiceField(queryset=Feat.objects.all(), to_field_name='name')
+                x[1].strip(')')
+                cleaned_data.feat_list.append({"name": x[0], "details": x[1]})
+            else:
+                x[0] = forms.ModelChoiceField(queryset=Feat.objects.all(), to_field_name='name')
+                cleaned_data.feat_list.append({"name": x[0]})
+        print(cleaned_data.get("feat_list"))

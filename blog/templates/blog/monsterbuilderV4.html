@@ -4,18 +4,18 @@
 {% endblock %}
 {% block content %}
 <div id="app">
-<h1>Monster Builder V4</h1>
+<h1>D&D 3.0 Monster Builder</h1>
 <form method="POST" name="monsterForm" action="/monsterbuilder/">
 {% csrf_token %}
-  <label for="name">Name</label>
-  <input type="text" id="name" name="monster_name" maxlength="60" id="name"  v-model="monsterName">
-  <br>
   {% if user.is_authenticated %}
   <button type="submit">Save</button>
   {% endif %}
   <fieldset name="basics">
     <legend>Basics</legend>
-    <label for="monstertype">Type</label>
+    <label for="name">Name </label>
+    <input type="text" id="name" name="monster_name" maxlength="60" id="name"  v-model="monsterName">
+    <br>
+    <label for="monstertype">Type </label>
     <select id="monstertype" name="monstertype" v-model="monsterType" @change.prevent="assignType">
         <option value="" selected disabled>Select Type</option>
         {% for monstertype in monstertypes %}
@@ -23,16 +23,21 @@
         {% endfor %}
     </select>
     <br>
-    {%  comment %} <!--TODO: subtypes
+    <!--TODO: subtypes -->
+    <!--
     <label for="subtypes">Subtypes</label>
-    <select id="subtypes" name="subtypes" v-model="subtypes" @change.prevent="assignSubtype" onmouseover="this.setAttribute('size', '6')" onmouseout="this.setAttribute('size', '1')" size="1"  multiple>
+    <select id="subtypes" name="subtypes" v-model="monsterSubtypes" @change.prevent="assignSubtype" onmouseover="this.setAttribute('size', '6')" onmouseout="this.setAttribute('size', '1')" size="1"  multiple>
+      {% comment %}
       {% for subtype in subtypes %}
         <option value="{{ subtype.name }}">{{ subtype.name|title }}</option>
       {% endfor %}
+      {% endcomment %}
+      <option value="cold">Cold</option>
+      <option value="incorporeal">Incorporeal</option>
     </select>
-    -->{%  endcomment %}
+    -->
     <br>
-    <label for="size">Size</label>
+    <label for="size">Size </label>
     <select id="size" name="size" @change="typicalReach" v-model="monsterSize">
         <option value="fine">Fine</option>
         <option value="diminutive">Diminutive</option>
@@ -48,32 +53,38 @@
       <label>Tall <input type="radio" value="tall" name="body_shape" @change="typicalReach" v-model="bodyShape"></label>
       <label>Long <input type="radio" value="long" name="body_shape" @change="typicalReach" v-model="bodyShape"></label>
     </p>
-     <!-- TODO: space: datalist of suggestions?-->
-    <label for='monster-reach'>Reach </label><input type='number' id='monster-reach' name='reach' step="5" v-model='monsterReach'>
-    <label for='monster-face'>Face </label><input type='text' id='monster-face' name='face'>
+     <!-- TODO: space: finish datalist of suggestions-->
+    <br>
+    <label for='monster-reach'>Reach </label><input type='number' id='monster-reach' name='reach' size="2" step="5" v-model='monsterReach'>
+    <label for='monster-face'>Face </label><input type='text' id='monster-face' name='face' list="monster-face-suggestions" size="15" >
+    {% verbatim %}
+    <datalist id='monster-face-suggestions'>
+      <option v-for="suggestion in monsterFaceList" v-bind:value="suggestion">
+    </datalist>
+    {% endverbatim %}
     <br>
     <label for="hd_number">Hit Dice </label>
-    <label for="hd_fraction">Click if the number of Hit Dice is a fraction. Then enter the denominator.</label>
+    <input type="number" id="hd_number" name="hd_number" min="0" size="3" v-model="hdNumber">
+    <br>
+    <label for="hd_fraction">Click if the number of Hit Dice is a fraction. Then enter the denominator in the box above.</label>
     <input type="checkbox" id="hd_fraction" name="hd_fraction" v-model="hdFraction">
-    <input type="number" id="hd_number" name="hd_number" min="0" v-model="hdNumber">
+    <hr>
     {% verbatim %}
     HD: {{ hitDice }}
-    <br>
-    Initiative: {{ addModifierSign(initiativeModifier) }}
     {% endverbatim %}
   </fieldset>
   <fieldset name="speed">
       <legend>Speed</legend>
-            <label for="speed">speed</label>
-            <input type="number" id="speed" name="speed" min="0" step="5" size="3" value="0">
-            <label for="burrow_speed">burrow</label>
-            <input type="number" id="burrow_speed" name="burrow_speed" min="0" step="5" size="3" value="0">
-            <label for="climb_speed">climb</label>
-            <input type="number" id="climb_speed" name="climb_speed" min="0" step="5" size="3" v-model="climbSpeed">
-            <label for="fly_speed">fly</label>
+            <label for="speed">Speed </label>
+            <input type="number" id="speed" name="speed" min="0" step="5" size="3" value="0"><br>
+            <label for="burrow_speed">Burrow </label>
+            <input type="number" id="burrow_speed" name="burrow_speed" min="0" step="5" size="3" value="0"><br>
+            <label for="climb_speed">Climb </label>
+            <input type="number" id="climb_speed" name="climb_speed" min="0" step="5" size="3" v-model="climbSpeed"><br>
+            <label for="fly_speed">Fly </label>
             <input type="number" id="fly_speed" name="fly_speed" min="0" step="5" size="3" v-model="flySpeed">
-            <label for="fly_maneuverability" v-show="flySpeed>0">Maneuverability</label>
-            <select  id="fly_maneuverability" name="fly_maneuverability" step="5" size="3" v-show="flySpeed>0">
+            <label for="fly_maneuverability" v-show="flySpeed>0">Maneuverability </label>
+            <select  id="fly_maneuverability" name="fly_maneuverability" v-show="flySpeed>0">
               <option selected disabled>Maneuverability</option>
               <option value="perfect">Perfect</option>
               <option value="good">Good</option>
@@ -81,23 +92,23 @@
               <option value="poor">Poor</option>
               <option value="clumsy">Clumsy</option>
             </select>
-            <label for="swim_speed">swim</label>
+            <br>
+            <label for="swim_speed">Swim </label>
             <input type="number" id="swim_speed" name="swim_speed" min="0" step="5" size="3" v-model="swimSpeed">
   </fieldset>
   <fieldset name="scores">
       <legend>Ability Scores and Saves</legend>
-      {% verbatim %}
       <table>
         <tr>
           <td>
             <label for="strength">Strength</label><br>
             <input type="number" id="strength" name="strength" min="0" size="2" v-model="strengthScore">
-             ({{ addModifierSign(strengthModifier) }})
+             {% verbatim %}({{ addModifierSign(strengthModifier) }}){% endverbatim %}
           </td>
           <td>
             <label for="dexterity">Dexterity</label><br>
             <input type="number" id="dexterity" name="dexterity" min="0" size="2" v-model="dexterityScore">
-             ({{ addModifierSign(dexterityModifier) }})<sup v-if="maxDexBonus">Max. DEX bonus</sup>
+             {% verbatim %}({{ addModifierSign(dexterityModifier) }}){% endverbatim %}<sup v-if="maxDexBonus">Max. DEX bonus</sup>
           </td>
 	      <td>
 	        <label for="constitution">Constitution</label><br>
@@ -107,7 +118,7 @@
                     name="constitution" size="2" readonly v-model="constitutionScore"
                     title="Constructs and undead are not alive and therefore have no constitution scores">
             <input v-else type="number" id="constitution" name="constitution" min="0" size="2" v-model="constitutionScore">
-             ({{ addModifierSign(constitutionModifier) }})
+             {% verbatim %}({{ addModifierSign(constitutionModifier) }}){% endverbatim %}
 	      </td>
       </tr>
 	    <tr>
@@ -121,38 +132,37 @@
                   name="intelligence" min="0" max="2" size="2" v-model="intelligenceScore"
                   title="Animals have an Intelligence score of 1 or 2"><!-- Modifier -->
           <input v-else type="number" id="intelligence" name="intelligence" min="0" size="2" v-model="intelligenceScore">
-             ({{ addModifierSign(intelligenceModifier) }})
+             {% verbatim %}({{ addModifierSign(intelligenceModifier) }}){% endverbatim %}
         </td>
         <td>
 	        <label for="wisdom">Wisdom</label><br>
             <input type="number" id="wisdom" name="wisdom" min="0" size="2" v-model="wisdomScore">
-             ({{ addModifierSign(wisdomModifier) }})
+             {% verbatim %}({{ addModifierSign(wisdomModifier) }}){% endverbatim %}
 	      </td>
           <td>
             <label for="charisma">Charisma</label><br>
 	        <input type="number" id="charisma" name="charisma" min="0" size="2" v-model="charismaScore">
-	         ({{ addModifierSign(charismaModifier) }})
+	         {% verbatim %}({{ addModifierSign(charismaModifier) }}){% endverbatim %}
           </td>
         </tr>
 	    <tr>
 	      <td>
-	        <label id="fort_label">Fortitude</label> {{ addModifierSign(fortitudeSave) }}<br>
+	        <label id="fort_label">Fortitude</label> {% verbatim %}{{ addModifierSign(fortitudeSave) }}{% endverbatim %}<br>
 	        <input type="radio" id="good_fort" area-labelledby="fort_label" name="fortitude" value="good" v-model="fortitudeQuality"><label for="good_fort">Good</label>
           <input type="radio" id="poor_fort" area-labelledby="fort_label" name="fortitude" value="poor" v-model="fortitudeQuality"><label for="poor_fort">Poor</label>
 	      </td>
 	      <td>
-	        <label id="ref_label">Reflex</label> {{ addModifierSign(reflexSave) }}<br>
+	        <label id="ref_label">Reflex</label> {% verbatim %}{{ addModifierSign(reflexSave) }}{% endverbatim %}<br>
 	        <input type="radio" id="good_ref" area-labelledby="ref_label" name="reflex" value="good" v-model="reflexQuality"><label for="good_ref">Good</label>
 	        <input type="radio" id="poor_ref" area-labelledby="ref_label" name="reflex" value="poor" v-model="reflexQuality"><label for="poor_ref">Poor</label>
 	      </td>
 	      <td>
-	        <label id="will_label">Will</label> {{ addModifierSign(willSave) }}<br>
+	        <label id="will_label">Will</label> {% verbatim %}{{ addModifierSign(willSave) }}{% endverbatim %}<br>
 	        <input type="radio" id="good_will" area-labelledby="will_label" name="will" value="good" v-model="willQuality"><label for="good_will">Good</label>
           <input type="radio" id="poor_will" area-labelledby="will_label" name="will" value="poor" v-model="willQuality"><label for="poor_will">Poor</label>
 	      </td>
 	    </tr>
 	  </table>
-	  {% endverbatim %}
   </fieldset>
   <fieldset name="skills">
     <legend>Skills</legend>
@@ -164,10 +174,86 @@
         <option value="{{ skill.name }},{{ skill.modifier }}">{{ skill.name }} ({{ skill.modifier }})</option>
       {% endfor %}
     </select><br>
-    <label for="skill_ranks">Ranks: <input type="number" id="skill_ranks" min="0" size="2" v-model="skillRanks"></label>
-    <label for="racial_bonus">Racial Bonus: <input type="number" id="racial_bonus" size="2" v-model="skillRacialBonus"></label><br>
-    <label for="skill_detail" v-show="showSkillDetail">For: <input id="skill_detail" v-model="skillDetail"></label><br>
+    <label for="skill-ranks">Ranks: <input type="number" id="skill-ranks" min="0" size="2" v-model="skillRanks"></label>
+    <label for="racial-bonus">Racial Bonus: <input type="number" id="racial-bonus" size="2" v-model="skillRacialBonus"></label><br>
+    <label for="skill-detail" v-show="showSkillDetail">For: <input id="skill-detail" list="skill-detail-suggestions" v-model="skillDetail"></label><br>
     <button v-on:click.prevent="addSkill">Add</button>
+    <datalist id="skill-detail-suggestions">
+      <option v-if="skillName=='Craft,INT'" value="armorsmithing">
+      <option v-if="skillName=='Craft,INT'" value="basketweaving">
+      <option v-if="skillName=='Craft,INT'" value="bookbinding">
+      <option v-if="skillName=='Craft,INT'" value="bowmaking">
+      <option v-if="skillName=='Craft,INT'" value="blacksmithing">
+      <option v-if="skillName=='Craft,INT'" value="calligraphy">
+      <option v-if="skillName=='Craft,INT'" value="carpentry">
+      <option v-if="skillName=='Craft,INT'" value="cobbling">
+      <option v-if="skillName=='Craft,INT'" value="gemcutting">
+      <option v-if="skillName=='Craft,INT'" value="leatherworking">
+      <option v-if="skillName=='Craft,INT'" value="locksmithing">
+      <option v-if="skillName=='Craft,INT'" value="painting">
+      <option v-if="skillName=='Craft,INT'" value="pottery">
+      <option v-if="skillName=='Craft,INT'" value="sculpture">
+      <option v-if="skillName=='Craft,INT'" value="shipmaking">
+      <option v-if="skillName=='Craft,INT'" value="stonemasonry">
+      <option v-if="skillName=='Craft,INT'" value="trapmaking">
+      <option v-if="skillName=='Craft,INT'" value="weaponsmithing">
+      <option v-if="skillName=='Craft,INT'" value="weaving">
+      <option v-if="skillName=='Knowledge,INT'" value="arcana">
+      <option v-if="skillName=='Knowledge,INT'" value="architecture and engineering">
+      <option v-if="skillName=='Knowledge,INT'" value="geography">
+      <option v-if="skillName=='Knowledge,INT'" value="history">
+      <option v-if="skillName=='Knowledge,INT'" value="local">
+      <option v-if="skillName=='Knowledge,INT'" value="nature">
+      <option v-if="skillName=='Knowledge,INT'" value="nobility and royalty">
+      <option v-if="skillName=='Knowledge,INT'" value="the planes">
+      <option v-if="skillName=='Knowledge,INT'" value="religion">
+      <option v-if="skillName=='Perform,CHA'" value="ballad">
+      <option v-if="skillName=='Perform,CHA'" value="buffoonery">
+      <option v-if="skillName=='Perform,CHA'" value="chant">
+      <option v-if="skillName=='Perform,CHA'" value="comedy">
+      <option v-if="skillName=='Perform,CHA'" value="dance">
+      <option v-if="skillName=='Perform,CHA'" value="drama">
+      <option v-if="skillName=='Perform,CHA'" value="drums">
+      <option v-if="skillName=='Perform,CHA'" value="epic">
+      <option v-if="skillName=='Perform,CHA'" value="flute">
+      <option v-if="skillName=='Perform,CHA'" value="harp">
+      <option v-if="skillName=='Perform,CHA'" value="juggling">
+      <option v-if="skillName=='Perform,CHA'" value="limericks">
+      <option v-if="skillName=='Perform,CHA'" value="lute">
+      <option v-if="skillName=='Perform,CHA'" value="mandolin">
+      <option v-if="skillName=='Perform,CHA'" value="melody">
+      <option v-if="skillName=='Perform,CHA'" value="mime">
+      <option v-if="skillName=='Perform,CHA'" value="ode">
+      <option v-if="skillName=='Perform,CHA'" value="pan pipes">
+      <option v-if="skillName=='Perform,CHA'" value="recorder">
+      <option v-if="skillName=='Perform,CHA'" value="shalm">
+      <option v-if="skillName=='Perform,CHA'" value="storytelling">
+      <option v-if="skillName=='Perform,CHA'" value="trumpet">
+      <option v-if="skillName=='Profession,WIS'" value="apothecary">
+      <option v-if="skillName=='Profession,WIS'" value="boater">
+      <option v-if="skillName=='Profession,WIS'" value="bookkeeper">
+      <option v-if="skillName=='Profession,WIS'" value="brewer">
+      <option v-if="skillName=='Profession,WIS'" value="cook">
+      <option v-if="skillName=='Profession,WIS'" value="driver">
+      <option v-if="skillName=='Profession,WIS'" value="farmer">
+      <option v-if="skillName=='Profession,WIS'" value="fisher">
+      <option v-if="skillName=='Profession,WIS'" value="guide">
+      <option v-if="skillName=='Profession,WIS'" value="herbalist">
+      <option v-if="skillName=='Profession,WIS'" value="herdsman">
+      <option v-if="skillName=='Profession,WIS'" value="innkeeper">
+      <option v-if="skillName=='Profession,WIS'" value="lumberjack">
+      <option v-if="skillName=='Profession,WIS'" value="miller">
+      <option v-if="skillName=='Profession,WIS'" value="miner">
+      <option v-if="skillName=='Profession,WIS'" value="porter">
+      <option v-if="skillName=='Profession,WIS'" value="rancher">
+      <option v-if="skillName=='Profession,WIS'" value="sailor">
+      <option v-if="skillName=='Profession,WIS'" value="scribe">
+      <option v-if="skillName=='Profession,WIS'" value="siege engineer">
+      <option v-if="skillName=='Profession,WIS'" value="stablehand">
+      <option v-if="skillName=='Profession,WIS'" value="tanner">
+      <option v-if="skillName=='Profession,WIS'" value="teamster">
+      <option v-if="skillName=='Profession,WIS'" value="woodcutter">
+    </datalist>
     <hr>
   {% verbatim %}
     <ul>
@@ -202,7 +288,7 @@
       </template>
     </ul>
     <button @click.prevent="addFeat">Add</button>
-    <br>
+    <hr>
     <ul>
       <li v-for="(feat, index) in featList"><button @click.prevent="deleteFeat(index)">Delete</button>{{ feat }}</li>
     </ul>    
@@ -210,20 +296,18 @@
   </fieldset>
   <fieldset name="attacks">
     <legend>Attacks</legend>
-    {% verbatim %}<p>BAB: {{ addModifierSign(baseAtkBonus) }} Grapple: {{ addModifierSign(grappleModifier) }}</p>{% endverbatim %}    
+    {% verbatim %}<p>Initiative: {{ addModifierSign(initiativeModifier) }}<br>BAB: {{ addModifierSign(baseAtkBonus) }} Grapple: {{ addModifierSign(grappleModifier) }}</p>{% endverbatim %}    
     <label for="natural-weapon"><input type="radio" id="natural-weapon" value="natural" v-model="attackNature"> Natural weapon</label>
     <label for="manufactured-weapon"><input type="radio" id="manufactured-weapon" value="manufactured" v-model="attackNature"> Manufactured weapon</label>
     <!-- Natural weapons only -->
     <p v-show="attackNature=='natural'">
-      Primary Weapons: A monster can use only one of these in a round. These are also used when making standard attacks and attacks of opportunity. If the monster has only one natural weapon, it is usually a strong primary attack.<br>
-      Secondary Weapons: A monster can use all of these when making a full attack (in addition to one primary weapon attack).<br>
-      <label for="primary-attack"><input type="radio" id="primary-attack" value="primary" v-model="attackGroup"> Primary</label>
-      <label for="secondary-attack"><input type="radio" id="secondary-attack" value="secondary" v-model="attackGroup"> Secondary</label>
-      <label for="strong-natural"><input type="checkbox" id="strong-natural" v-model="soleNatural"> Strong</label>
+      <label for="primary-attack"><input type="radio" id="primary-attack" value="primary" v-model="attackGroup"> Primary Weapon: A monster can use only one of these in a round. They are also used when making standard attacks and attacks of opportunity. If the monster has only one natural weapon, it is usually a strong primary attack.</label><br>
+      <label for="strong-natural"><input type="checkbox" id="strong-natural" v-model="soleNatural"> Strong</label><br>
+      <label for="secondary-attack"><input type="radio" id="secondary-attack" value="secondary" v-model="attackGroup"> Secondary Weapon: A monster can use all of these when making a full attack (in addition to one primary weapon attack).</label>
     </p>
     <!-- Manufactured weapons only -->
     <p v-show="attackNature=='manufactured'">
-      <label for="weapon-preset">Manufactured Weapon Preset</label>
+      <label for="weapon-preset">Preset </label>
       <select id="weapon-preset" v-model="presetWeapon" @change="presetAttack">
         <option value="null" selected disabled>Weapon Preset</option>
         <optgroup label="Melee Weapons">
@@ -237,12 +321,26 @@
           {% endfor %}
         </optgroup>
       </select><br>
-      <label for="weapon-size">Size</label> <input type="text" id="weapon-size" v-model="weaponSize"><br>
-      <label for="attack-hand">Hand</label>
+      <label for="weapon-size">Size: </label>
+      <select id="weapon-size" v-model="weaponSize">
+        <option value="fine">Fine</option>
+        <option value="diminutive">Diminutive</option>
+        <option value="tiny">Tiny</option>
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large">Large</option>
+        <option value="huge">Huge</option>
+        <option value="gargantuan">Gargantuan</option>
+        <option value="colossal">Colossal</option>
+      </select><br>
+      <label for="attack-hand">Hand </label>
       <select id="attack-hand" v-model="attackHand">
-        <option value="one-handed">One-handed (dominant hand)</option>
-        <option value="off-hand">Off-hand</option>
-        <option value="two-handed">Two-handed</option>
+        <option value="one-handed,false">One-handed (dominant hand)</option>
+        <option value="two-handed,false">Two-handed</option>
+        <option value="off-hand,false">One-handed (off-hand)</option>
+        <option value="one-handed,off-light">Dual wielding (dominant hand, off-hand light)</option>
+        <option value="one-handed,equal-size">Dual wielding (dominant hand, off-hand not light)</option>
+        <option value="off-hand,true">Dual wielding (off-hand)</option>
       </select>
     </p>
     <!-- All attacks -->
@@ -269,6 +367,7 @@
       <button @click.prevent="addAttack">Add Attack</button>
     </p>
     {% verbatim %}
+    <hr>
     <ul>
       <li v-for="(attack, index) in attackList">
         <button @click.prevent="deleteAttack(index)">Delete</button><button @click.prevent="editAttack(index)">Edit</button>
@@ -279,10 +378,11 @@
   </fieldset>
   <fieldset name="defenses">
     <legend>Armor Class</legend>
-    <p>Armor Class: {% verbatim %}{{ armorClass }}{% endverbatim %}</p>
-    <label>Natural armor <input type="number" name="natural_armor" v-show="monsterType!='ooze'" v-model="naturalArmor"></label><br>
-    <label>Magic deflection bonus <input type="number" name="deflection_bonus" v-model="deflectionBonus"></label><br>
-    <label for="manufactured_armor">Armor</label>
+    {% verbatim %}Armor Class: {{ armorClass }}<br>Armor Check Penalty: {{ 0 - armorPenalty }}{% endverbatim %}
+    <hr>
+    <label>Natural armor <input type="number" name="natural_armor" size="2" v-show="monsterType!='ooze'" v-model="naturalArmor"></label><br>
+    <label>Magic deflection bonus <input type="number" name="deflection_bonus" size="2" v-model="deflectionBonus"></label><br>
+    <label for="manufactured_armor">Armor </label>
     <select id="manufactured_armor" name="manufactured_armor" v-model="manufacturedArmor" @change="armorCalculations">
       <option value="none">None</option>
       <optgroup label="Light Armor">
@@ -301,44 +401,42 @@
         {% endfor %}
       </optgroup>
     </select>
-    <label for="worn_shield">Shield</label>
+    <br>
+    <label for="worn_shield">Shield </label>
     <select id="worn_shield" v-model="wornShield" @change="armorCalculations">
       <option value="none">None</option>
       {% for shield in shields %}
         <option value="{{ shield.name }}">{{ shield.name|title }} ({{ shield.armor_bonus }})</option>
       {% endfor %}
     </select>
-    Armor Check Penalty: {% verbatim %}{{ 0 - armorPenalty }}{% endverbatim %}
   </fieldset>
-   <!-- TODO: DR, SR, aura -->
   <fieldset name="special_abilities">
     <legend>Special Abilities</legend>
-    <label><input type="radio" value="Extraordinary" name="special-type" v-model="specialType">Extraordinary</label>
-    <label><input type="radio" value="Spell-like" name="special-type" v-model="specialType">Spell-like</label>
-    <label><input type="radio" value="Supernatural" name="special-type" v-model="specialType">Supernatural</label>
+    <label for="special-name">Name</label>:
+    <input type="text" id="special-name" v-model="specialAbility">
     <br>
-    <label>Special Abilities</label>
-    Select Preset:
+    <label>Select Preset: </label>
     <select v-model="specialPreset" @change="presetSpecialAbility">
       {% for ability in special %}
         <option value="{{ ability.name|title }}">{{ ability.name|title }}</option>
       {% endfor %}
     </select>
     <br>
-    <label for="special-name">Name</label>:
-    <input type="text" id="special-name" v-model="specialAbility">
+    <label><input type="radio" value="Extraordinary" name="special-type" v-model="specialType">Extraordinary</label>
+    <label><input type="radio" value="Spell-like" name="special-type" v-model="specialType">Spell-like</label>
+    <label><input type="radio" value="Supernatural" name="special-type" v-model="specialType">Supernatural</label>
     <br>
-<!-- TODO: bigger textarea-->
     <label for="special-description">Description</label>:
     <br>
-    <textarea id="special-description" v-model="specialDescription"></textarea>
+    <textarea id="special-description" rows="5" cols="50" v-model="specialDescription"></textarea>
     <br>
-    <label for="special-shorthand">In statblock</label>
-    <input type="text" id="special-shorthand" v-model="specialShorthand">
-    <br>
-    <label for="special-category">Category</label>
+    <label for="special-category">Category </label>
     <input type="text" id="special-category" list="category-list" v-model="specialCategory">
+    <br>
+    <label for="special-statblock"> In statblock </label>
+    <input type="text" id="special-statblock" size="50" v-model="specialStatblock">
     <datalist id="category-list">
+      <option value="aura">
       <option value="sense">
       <option value="attack">
       <option value="quality">
@@ -348,57 +446,19 @@
       <option value="damage reduction">
     </datalist>
     <br>
-    <!-- Saving Throws against the attack -->
-    <label for="special-saving-throw">Saving Throw: </label>
-    <select id="special-saving-throw" v-model="specialSave">
-      <option value="none">None</option>
-      <option value="fortitude">Fortitude</option>
-      <option value="reflex">Reflex</option>
-      <option value="will">Will</option>
-    </select>
-    <select v-model="specialSaveHalfOrNegate">
-      <option disabled value="none">Negate or Half</option>
-      <option value="negates">Negates</option>
-      <option value="halves">Halves</option>
-    </select>
-    <select v-model="specialSaveAbility">
-      <option disabled value="none">Based on Ability</option>
-      <option value="STR">Strength</option>
-      <option value="DEX">Dexterity</option>
-      <option value="CON">Constitution</option>
-      <option value="INT">Intelligence</option>
-      <option value="WIS">Wisdom</option>
-      <option value="CHA">Charisma</option>
-    </select>
-    <br>
     <button @click.prevent="addSpecialAbility">Add Special Ability</button>
+    <hr>
     {% verbatim %}
     <ul>
       <li v-for="(ability, index) in specialAbilities">
         <button @click.prevent="deleteSpecialAbility(index, 'fromUser')">Delete</button><button @click.prevent="editSpecialAbility(index, 'fromUser')">Edit</button>
-        <b>{{ ability.special_name }} ({{ ability.special_type[0] + ability.special_type[1] }})</b>: {{ ability.description }} 
-        <span v-if="ability.save!='none'"> {{ ability.save }} {{ ability.half_negate }} DC {{ saveDC(ability.save_base, ability.special_name) }}.
-          <span v-if="ability.save_base=='STR'"> Save DC is Strength-based</span>
-          <span v-else-if="ability.save_base=='DEX'"> Save DC is Dexterity-based</span>
-          <span v-else-if="ability.save_base=='CON'"> Save DC is Consitution-based</span>
-          <span v-else-if="ability.save_base=='INT'"> Save DC is Intelligence-based</span>
-          <span v-else-if="ability.save_base=='WIS'"> Save DC is Wisdom-based</span>
-          <span v-else-if="ability.save_base=='CHA'"> Save DC is Charisma-based</span>
-        </span>
-        <span v-if="ability.shorthand">(In statblock: {{ ability.category }} {{ ability.shorthand }}.)</span>
+        <b>{{ ability.special_name }} ({{ ability.special_type[0] + ability.special_type[1] }})</span></b>: {{ displaySpecialAbilitiesList[index].description }} 
+        <span v-if="ability.statblock">(In statblock {{ ability.category }}: {{ displaySpecialAbilitiesList[index].statblock }}.)</span>
       </li>
       <li v-for="(ability, index) in monsterTypeSpecialAbilities">
         <button @click.prevent="deleteSpecialAbility(index, 'fromType')">Delete</button><button @click.prevent="editSpecialAbility(index, 'fromType')">Edit</button>
-        <b>{{ ability.special_name }} ({{ ability.special_type[0] + ability.special_type[1] }})</b>: {{ ability.description }} 
-        <span v-if="ability.save!='none'"> {{ ability.save }} {{ ability.half_negate }} DC {{ saveDC(ability.save_base, ability.special_name) }}.
-          <span v-if="ability.save_base=='STR'"> Save DC is Strength-based</span>
-          <span v-else-if="ability.save_base=='DEX'"> Save DC is Dexterity-based</span>
-          <span v-else-if="ability.save_base=='CON'"> Save DC is Consitution-based</span>
-          <span v-else-if="ability.save_base=='INT'"> Save DC is Intelligence-based</span>
-          <span v-else-if="ability.save_base=='WIS'"> Save DC is Wisdom-based</span>
-          <span v-else-if="ability.save_base=='CHA'"> Save DC is Charisma-based</span>
-        </span>
-        <span v-if="ability.shorthand">(In statblock: {{ ability.category }} {{ ability.shorthand }}.)</span>
+        <b>{{ ability.special_name }}</b>: {{ ability.description }}
+        <span v-if="ability.statblock">(In statblock {{ ability.category }}: {{ ability.statblock }}.)</span>
       </li>
     </ul>
     {% endverbatim %}
@@ -408,16 +468,16 @@
     <label for="spell_name">Spell or Power Name </label>
     <input type="text" id="spell_name" v-model="spellName">
     <br>
-    <label for="spell-attack-dc">Attack</label>
+    <label for="spell-attack-dc">Attack </label>
     <select id="spell-attack-dc" onmouseover="this.setAttribute('size', '3')" onmouseout="this.setAttribute('size', '1')" size="1" multiple v-model="spellAttack">
-      <option value="[]">None</option>
       <option value="melee">Melee touch attack</option>
       <option value="ranged">Ranged touch attack</option>
       <option value="savingthrow">Saving Throw</option>
     </select>
-    <label for="spell-range">Range</label>
+    <br>
+    <label for="spell-range">Range </label>
     <select id="spell-range" v-model="spellRange">
-      <option value="" selected>None</option>
+      <option value="none" selected>None</option>
       <option value="persional">Personal</option>
       <option value="touch">Touch</option>
       <option value="close">Close</option>
@@ -426,14 +486,13 @@
       <option value="unlimited">Unlimited</option>
       <option value="custom">Custom</option>
     </select>
-    <label for="custom-range">Custom Range</label>
-    <input type="number" id="custom-range" v-model="customSpellRange">
+    <label for="custom-range" v-show="spellRange=='custom'">Custom Range <input type="number" id="custom-range" size="2" step="5" v-model="customSpellRange"></label>
     <br>
-    <label for="spell-level">Spell Level</label> <input type="number" id="spell-level" v-model="spellLevel">
+    <label for="spell-level">Spell Level <input type="number" id="spell-level" size="2" v-model="spellLevel"></label>
     <br>
-    <label for="spell-school">Spell School</label>
+    <label for="spell-school">Spell School </label>
     <select id="spell-school" v-model="spellSchool">
-      <option value="" disabled>School</option>
+      <option value="none" disabled>School</option>
       <option value="abjuration">Abjuration</option>
       <option value="conjuration">Conjuration</option>
       <option value="divination">Divination</option>
@@ -444,57 +503,56 @@
       <option value="transmutation">Transmutation</option>
     </select>
     <br>
-    <label for="spell-detail">Spell Detail</label> <input type="number" id="spell-detail" v-model="spellDetail">
-    <datalist for="spell-detail">
-      <option value="self only">self only</option>
-      <option value="self plus 50 pounds of objects only">self plus 50 pounds of objects only</option>
-      <option value="1 hour">1 hour</option>
-      <option value=""></option>
-      <option value=""></option>
-      <option value=""></option>
+    <label for="spell-detail">Spell Detail <input type="text" id="spell-detail" list="spell-detail-list" v-model="spellDetail"></label>
+    <datalist id="spell-detail-list">
+      <option value="self only">
+      <option value="self plus 50 pounds of objects only">
+      <option value="1 hour">
+      <option value="30 ft. radius">
+      <option value="as spell except">
     </datalist>
     <br>
-    As a <input type="number" id="caster-level" v-model="casterLevel"> <label for="caster-level">level</label> 
-    <select v-model="casterAbility">
+    <label for="caster-level">As a <input type="number" id="caster-level" size="2" v-model="casterLevel"> level </label> 
+    <label for="caster-ability">
+    <select id="caster-ability" v-model="casterAbility">
       <option disabled value="none">Ability</option>
       <option value="INT">Intelligence</option>
       <option value="WIS">Wisdom</option>
       <option value="CHA">Charisma</option>
-    </select>-based magic user.
+    </select>-based magic user.</label>
     <br>
     <button @click.prevent="addSpell('atWill')">At will</button>
-    <button @click.prevent="addSpell('onceDay')">1 per day</button>
     <button @click.prevent="addSpell('thriceDay')">3 per day</button>
+    <button @click.prevent="addSpell('onceDay')">1 per day</button>
     <button @click.prevent="addSpell('onceWeek')">1 per week</button>
-    <br>
     <button @click.prevent="addSpell('psionics')">Psionics</button>
-    <br>
+    <hr>
     {% verbatim %}
     <b>Spells (Sp)</b>
     <ul>
     <!-- TODO: note that these don't automatically update -->
-      <li>At Will—<span v-for="spell in spellsAtWill">
+      <li>At Will—<span v-for="(spell, index) in spellsAtWill">
+        <i @click="deleteSpell('atWill', index)">{{ spell.name }}</i>
+        <span v-if="spell.melee"> {{ addModifierSign(spell.melee) }} melee touch</span>
+        <span v-if="spell.ranged"> {{ addModifierSign(spell.ranged) }} ranged touch</span>
+        <span v-if="spell.saving_throw"> (DC {{ spell.saving_throw }})</span>
+        <span v-if="spell.detail"> ({{ spell.detail }})</span>, </span>
+      </li>
+      <li>3 per day—<span v-for="(spell, index) in spellsThricePerDay">
+        <i @click="deleteSpell('thriceDay', index)">{{ spell.name }}</i>
+        <span v-if="spell.melee"> {{ addModifierSign(spell.melee) }} melee touch</span>
+        <span v-if="spell.ranged"> {{ addModifierSign(spell.ranged) }} ranged touch</span>
+        <span v-if="spell.saving_throw"> (DC {{ spell.saving_throw }})</span>
+        <span v-if="spell.detail"> ({{ spell.detail }})</span>, </span>
+      </li>
+      <li @click="deleteSpell('onceDay', index)">1 per day—<span v-for="(spell, index) in spellsOncePerDay">
         <i>{{ spell.name }}</i>
         <span v-if="spell.melee"> {{ addModifierSign(spell.melee) }} melee touch</span>
         <span v-if="spell.ranged"> {{ addModifierSign(spell.ranged) }} ranged touch</span>
         <span v-if="spell.saving_throw"> (DC {{ spell.saving_throw }})</span>
         <span v-if="spell.detail"> ({{ spell.detail }})</span>, </span>
       </li>
-      <li>1 per day—<span v-for="spell in spellsOncePerDay">
-        <i>{{ spell.name }}</i>
-        <span v-if="spell.melee"> {{ addModifierSign(spell.melee) }} melee touch</span>
-        <span v-if="spell.ranged"> {{ addModifierSign(spell.ranged) }} ranged touch</span>
-        <span v-if="spell.saving_throw"> (DC {{ spell.saving_throw }})</span>
-        <span v-if="spell.detail"> ({{ spell.detail }})</span>, </span>
-      </li>
-      <li>3 per day—<span v-for="spell in spellsThricePerDay">
-        <i>{{ spell.name }}</i>
-        <span v-if="spell.melee"> {{ addModifierSign(spell.melee) }} melee touch</span>
-        <span v-if="spell.ranged"> {{ addModifierSign(spell.ranged) }} ranged touch</span>
-        <span v-if="spell.saving_throw"> (DC {{ spell.saving_throw }})</span>
-        <span v-if="spell.detail"> ({{ spell.detail }})</span>, </span>
-      </li>
-      <li>1 per week—<span v-for="spell in spellsOncePerWeek">
+      <li @click="deleteSpell('onceWeek', index)">1 per week—<span v-for="(spell, index) in spellsOncePerWeek">
         <i>{{ spell.name }}</i>
         <span v-if="spell.melee"> {{ addModifierSign(spell.melee) }} melee touch</span>
         <span v-if="spell.ranged"> {{ addModifierSign(spell.ranged) }} ranged touch</span>
@@ -504,7 +562,7 @@
     </ul>
     <b>Psionics (Sp)</b>
     <ul>
-      <li>At Will—<i v-for="power in psionicPowers">{{ power }}, </i></li>
+      <li>At Will—<i v-for="(power, index) in psionicPowers" @click="deleteSpell('psionics', index)">{{ power }}, </i></li>
     </ul>
     {% endverbatim %} 
   </fieldset>
@@ -546,9 +604,9 @@
   <fieldset name="description">
     <legend>Description</legend>
     <label for="physical-description">Appearance</label><br>
-    <textarea id="physical-description" name="monster_appearance"></textarea><br>
+    <textarea id="physical-description" name="monster_appearance" rows="5" cols="50"></textarea><br>
     <label for="monster-description">Other</label><br>
-    <textarea id="monster-description" name="monster_description"></textarea>
+    <textarea id="monster-description" name="monster_description" rows="5" cols="50"></textarea>
   </fieldset>
   <template>
     <input type="number" name="bonus_hp" :value="bonusHitPoints">
@@ -579,7 +637,10 @@
           weaponInfo.weaponSize = '{{ weapon.display_size }}';
           weaponInfo.attackForm = '{{ weapon.atk_form }}';
           weaponInfo.weaponDamage = '{{ weapon.damage }}';
-          weaponInfo.weaponMaterial = 'manufactured';
+          weaponInfo.critRange = {{ weapon.crit_range }};
+          weaponInfo.critDouble = '{{ weapon.crit_double }}';
+          weaponInfo.rangeIncrement = {{ weapon.range_increment }};
+          weaponInfo.weaponReach = '{{ weapon.reach }}';
           break;
       {% endfor %}
       {% for weapon in ranged_weapons %}
@@ -587,7 +648,9 @@
           weaponInfo.weaponSize = '{{ weapon.display_size }}';
           weaponInfo.attackForm = '{{ weapon.atk_form }}';
           weaponInfo.weaponDamage = '{{ weapon.damage }}';
-          weaponInfo.weaponMaterial = 'manufactured';
+          weaponInfo.critRange = {{ weapon.crit_range }};
+          weaponInfo.critDouble = '{{ weapon.crit_double }}';
+          weaponInfo.rangeIncrement = {{ weapon.range_increment }};
           break;
       {% endfor %}
     }
@@ -667,10 +730,7 @@
         case '{{ ability.name }}':
           return {
             description: `{{ ability.description }}`,
-            shorthand: `{{ ability.shorthand }}`,
-            save_type: '{{ ability.save_type }}',
-            save_effect: '{{ ability.save_effect }}',
-            save_ability: '{{ ability.save_ability }}',
+            statblock: `{{ ability.shorthand }}`,
             category: '{{ ability.category }}',
           };
           break;
@@ -680,22 +740,24 @@
     }
   }
   function skillSynergyInformation(selectedSkill) {
+    {% spaceless %}
     switch(selectedSkill) {
       {% for skill in skills %}
-        {% if skill.synergy != 'Monsterbuilder.Skill.None' %}
+        {% if skill.synergy.values|length > 0 %}
           case '{{ skill.name }}':
             return [{% for synergy in skill.synergy.values %}{{synergy}}, {% endfor %}];
             break;
         {% endif %}
         {% if skill.name == 'Heal' %}
           case 'Profession (herbalist)':
-            return [{{ skill.values }}];
+            return [{ 'name': '{{ skill.name }}', 'modifier': '{{ skill.modifier }}'}];
             break;
         {% endif %}
       {% endfor %}
       default:
         return [];
     }
+    {% endspaceless %}
   }
   function featInformation(selectedFeat) {
     let featInfo = {};

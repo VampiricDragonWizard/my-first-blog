@@ -5,7 +5,7 @@ from django.views.generic.list import ListView
 from django.shortcuts import render, get_object_or_404
 from rest_framework.parsers import JSONParser
 from .forms import MonsterForm
-from .models import Monster, MonsterType, Skill, Feat, Weapon, Armor, SpecialAbility
+from .models import Monster, MonsterType, Skill, Feat, Weapon, Armor, SpecialAbility, SkillRanks, FeatDetails
 from .serializers import (MonsterTypeSerializer, SkillSerializer, FeatSerializer,
                           WeaponSerializer, ArmorSerializer, SpecialAbilitySerializer)
 
@@ -53,7 +53,6 @@ def monster_builder(request):
             # TODO:
             monster = Monster(
                 name = form.cleaned_data["name"],
-                hd_number = form.cleaned_data["hd_number"],
                 bonus_hp = form.cleaned_data["bonus_hp"],
                 monstertype = form.cleaned_data["monstertype"],
                 size = form.cleaned_data["size"],
@@ -95,20 +94,29 @@ def monster_builder(request):
                 monster_appearance = form.cleaned_data["monster_appearance"],
                 monster_description = form.cleaned_data["monster_description"],
             )
+            # hd_number
+            hd_number = form.cleaned_data.get('hd_number')
+            if form.cleaned_data.get("hd_fraction"):
+                hd_number = float(1 / hd_number)
+            else:
+                hd_number = float(hd_number)
+            monster.hd_number = hd_number
+
+            monster.save()
             # subtypes
             # skills
-                # for skill in skills:
-                    # if skill not in Skill model, add it to model
-                        # s1 = Skill(name=skill.skill_name, modifier=skill.modifier)
-                        # s1.save()
-                    # create through table entry
-                    # skillranks1 = SkillRanks(monster=monster, skill=skill from Skill model, ranks=skill.ranks, racial_bonus=skill.racial_bonus)
-                    # skillranks1.save()
+            for skill in form.cleaned_data["skills"]:
+                # create through table entry
+                skillranks = SkillRanks(monster=monster, skill=skill.name, ranks=skill.ranks, racial_bonus=skill.racial_bonus, variant=skill.detail)
+                skillranks.save()
             # feats
-                # for feat in feats:
-                    # featdetails1 = FealDetails(monster=monster, feat=feat from Feat model, detail=feat.detail)
-                    # featdetails1.save()
-            # monster.save()
+            for feat in form.clean_data["feat_list"]:
+                if feat.detail:
+                    featdetails = FeatDetails(monster=monster, feat=feat.name, details=feat.details)
+                else:
+                    featdetails = FeatDetails(monster=monster, feat=feat.name)
+                featdetails.save()
+            # TODO: form error list
             print("monster is saved")
             return HttpResponse("OK")
             if request.POST['action'] == 'show':

@@ -52,14 +52,8 @@ function calculateModifier(score) {
       case 'colossal':
         return -8;
         break;
-      /*
-      Actually natural attacks are 2 size categories smaller than the monster,
-      but because this method is only used for attacks to check if they're smaller than the monster,
-      this should work.
-      */
-      case 'natural':
-        return 10;
-        break;
+      default:
+        window.message("Enter size of weapon");
     }
   }
 // MonsterBuilder Vue file
@@ -72,6 +66,7 @@ const app = Vue.createApp({
         monsterSize: 'medium',
         monsterReach: 5,
         bodyShape: 'tall',
+        monsterFaceList: ["5 ft. ✕ 5 ft."],
         // TODO: finish this section
         // Show on Page
         showSkillsSection: true,
@@ -90,6 +85,7 @@ const app = Vue.createApp({
         willQuality: 'open',
         // Type
         monsterType: 'Type',
+        monsterSubtype: null,
         typeBaseSkillPoints: null,
         typeSkillPoints: null,
         typeBaseNumberOfFeats: null,
@@ -134,16 +130,12 @@ const app = Vue.createApp({
           attackGroup: null,
           soleNatural: false,
           //manufactured
-          presetWeapon: null,
-          weaponSize: null,
-          attackHand: null,
+          presetWeapon: '',
+          weaponSize: 'medium',
+          attackHand: 'one-handed,false',
         attackList: [
           // Natural: nature: 'natural', group, sole, form, atk_name, number, reach, range, weapon_damage, crit_range, crit_double, special_effect, magic
           // Manufactured: nature: 'manufactured', hand, form, atk_name, number, weapon_size, reach, range, weapon_damage, crit_range, crit_double, special_effect, magic
-          { nature: 'manufactured', hand: 'two-handed', form: 'melee', atk_name: 'flaming longspear', number: 1, weapon_size: 'large', reach: 10, range: 30,
-          weapon_damage: '1d8', crit_range: 2, crit_double: '✕2', special_effect: '1d4 fire', magic: 0},
-          { nature: 'natural', group: 'secondary', sole: false, form: 'melee', atk_name: 'sting', number: 2, reach: 5, range: null, weapon_damage: '1',
-          crit_range: 1, crit_double: '✕2', special_effect: 'poison', magic: 0}
         ],
         // Armor
         naturalArmor: 0,
@@ -155,13 +147,13 @@ const app = Vue.createApp({
         maxDexBonus: null,
         // Spells and Psionics
         spellName: '',
-        spellLevel: null,
-        spellSchool: null,
+        spellLevel: 1,
+        spellSchool: 'none',
         spellAttack: [],
-        spellRange: null,
+        spellRange: 'none',
         customSpellRange: 0,
-        casterLevel: null,
-        casterAbility: null,
+        casterLevel: 1,
+        casterAbility: 'none',
         spellDetail: null,
         spellsAtWill: [],
         spellsOncePerDay: [],
@@ -169,15 +161,12 @@ const app = Vue.createApp({
         spellsOncePerWeek: [],
         psionicPowers: [],
         // Special Abilities
-        specialPreset: null,
+        specialPreset: '',
         specialAbility: null,
         specialCategory: null,
         specialType: '',
         specialDescription: '',
-        specialShorthand: '',
-        specialSave: 'none',
-        specialSaveHalfOrNegate: null,
-        specialSaveAbility: 'none',
+        specialStatblock: '',
         specialAbilities: [],
         monsterTypeSpecialAbilities: [],
       };
@@ -340,51 +329,76 @@ const app = Vue.createApp({
           baseNumber += this.intelligenceModifier;
         }
         else if(['dragon', 'outsider'].includes(this.monsterType)) {
-          return basePoints + (Math.floor((this.hdCalc-1)/4) * this.typeNumberOfFeats) - this.totalFeats;
+          return baseNumber + (Math.floor((this.hdCalc-1)/4) * this.typeNumberOfFeats) - this.totalFeats;
         }
-        return this.typeBaseNumberOfFeats + (Math.floor((this.extraHD)/4) * this.typeNumberOfFeats) - this.totalFeats;
+        return baseNumber + (Math.floor((this.extraHD)/4) * this.typeNumberOfFeats) - this.totalFeats;
       },
       showSkillDetail() {
-        return ['Craft,INT', 'Knowledge,INT', 'Profession,WIS', 'Perform,CHA'].includes(this.skillName);
+        return ['Craft,INT', 'Knowledge,INT', 'Profession,WIS', 'Perform,CHA', 'Speak Language,None'].includes(this.skillName);
       },
       displayAttackList() {
         let displayList = [];
         for (x in this.attackList) {
           attack = this.attackList[x];
-          let display = " "
+          let display = " ";
           let attackBonus = 0;
           let offAttackBonus = null;
           let weaponDamage = attack.weapon_damage.split("/");
           let critDouble = attack.crit_double.split("/");
+          // TODO: weird combinations (ex. dual wielding a hooked hammer and a dagger
           if (attack.nature=='manufactured') {
             if (weaponDamage.length>1) {
               // The monster wields a double weapon
               //calculateManufacturedAttackBonus(form, hand, name, size, multiple)
               attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                            this.calculateManufacturedAttackBonus(attack.form, 'one-handed', attack.atk_name, attack.weapon_size, 'double');
+                  this.calculateManufacturedAttackBonus(
+                      attack.form, 'one-handed', attack.atk_name, attack.weapon_size, 'double');
               offAttackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                               this.calculateManufacturedAttackBonus(attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'double');
+                  this.calculateManufacturedAttackBonus(
+                      attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'double');
             }
-            // TODO: Two-Weapon Fighting (separate weapons)
-            /*else if () {
-              // The monster wields two or more separate weapons              
-              if (off-hand weapons are all light) {
+            else if (attack.number>1) {
+              // The monster wields two or more similar weapons (i.e. two shortswords)
+              if (sizeModifier(attack.weapon_size)<this.monsterSizeModifier) {
                 attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                              this.calculateManufacturedAttackBonus(attack.form, 'one-handed', attack.atk_name, attack.weapon_size, 'off-light');
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, attack.hand, attack.atk_name, attack.weapon_size, 'off-light');
                 offAttackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                                 this.calculateManufacturedAttackBonus(attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'off-light');
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'off-light');
               }
               else {
                 attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                              this.calculateManufacturedAttackBonus(attack.form, 'one-handed', attack.atk_name, attack.weapon_size, 'equal-size');
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, attack.hand, attack.atk_name, attack.weapon_size, 'equal-size');
                 offAttackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                                 this.calculateManufacturedAttackBonus(attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'equal-size');
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'equal-size');
               }
-            }*/
+            }
+            // TODO: Two-Weapon Fighting (separate weapons)
+            else if (attack.dual && attack.hand=='one-handed') {
+                attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, 'one-handed', attack.atk_name, attack.weapon_size, attack.dual);
+            }
+            else if (attack.dual && attack.hand=='off-hand') {
+              if (sizeModifier(attack.weapon_size)<this.monsterSizeModifier) {
+                attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'off-light');
+              }
+              else {
+                attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
+                    this.calculateManufacturedAttackBonus(
+                        attack.form, 'off-hand', attack.atk_name, attack.weapon_size, 'equal-size');
+              }
+            }
             else {
               // The monster wields only one weapon, which is not a double weapon
               attackBonus = this.baseAtkBonus + this.monsterSizeModifier + attack.magic +
-                          this.calculateManufacturedAttackBonus(attack.form, attack.hand, attack.atk_name, attack.weapon_size, false);
+                  this.calculateManufacturedAttackBonus(
+                      attack.form, attack.hand, attack.atk_name, attack.weapon_size, false);
             }
             for (let i=0; i<Math.ceil(this.baseAtkBonus/5); i++) {
               if (i!=0) {
@@ -411,42 +425,27 @@ const app = Vue.createApp({
           if (attack.form!='melee') {
             display += " " + attack.range + "ft. range";
           }
-          if (weaponDamage.length>2 || attack.number>1) {
-            let primaryDamageBonus = this.calculateManufacturedDamageBonus(attack.form, 'one-handed', attack.atk_name, attack.weapon_size, false) + attack.magic;
-            let secondaryDamageBonus = this.calculateManufacturedDamageBonus(attack.form, 'off-hand', attack.atk_name, attack.weapon_size, true) + attack.magic;
-            display += " (" + weaponDamage[0] + this.addModifierSign(primaryDamageBonus);
-            if (attack.crit_range<20) {
-              display += "/" + attack.crit_range + "‒20";
-            }
-            if (attack.crit_double!='✕2') {
-              display += "/" + critDouble[0];
-            }
+          // Damage
+          if (weaponDamage.length>1 || (attack.number>1 && attack.nature=='manufactured')) {
+            let primaryDamageBonus = this.calculateManufacturedDamageBonus(
+                attack.form, 'one-handed', attack.atk_name, attack.weapon_size, false) + attack.magic;
+            let secondaryDamageBonus = this.calculateManufacturedDamageBonus(
+                attack.form, 'off-hand', attack.atk_name, attack.weapon_size, true) + attack.magic;
+            display += " (" + weaponDamage[0] + this.addModifierSign(primaryDamageBonus) + this.displayCritical(attack.crit_range, critDouble[0]);
             for (let i=1; i<weaponDamage.length; i++) {
-              display += ", " + weaponDamage[i] + this.addModifierSign(secondaryDamageBonus);
-            if (attack.crit_range<20) {
-              display += "/" + attack.crit_range + "‒20";
+              display += ", " + weaponDamage[i] + this.addModifierSign(secondaryDamageBonus) + this.displayCritical(attack.crit_range, critDouble[i]);
             }
-              if (attack.crit_double!='✕2') {
-                display += "/" + critDouble[i];
-              }
-            }
-            for (let i=1; i<attack.number; i++) {
-              display += ", " + weaponDamage[i] + this.addModifierSign(secondaryDamageBonus);
-            if (attack.crit_range<20) {
-              display += "/" + attack.crit_range + "‒20";
-            }
-              if (attack.crit_double!='✕2') {
-                display += "/" + critDouble[i];
-              }
+            if (attack.number>1) {
+              display += ", " + weaponDamage[0] + this.addModifierSign(secondaryDamageBonus) + this.displayCritical(attack.crit_range, critDouble[0]);
             }
             // Special Effect
             if (attack.special_effect) {
               display += " plus " + attack.special_effect;
-            } 
+            }
             display += ")";
           }
           else if (weaponDamage.length==1) {
-            display += " (" + attack.weapon_damage
+            display += " (" + attack.weapon_damage;
             // start damageBonus
             let damageBonus = 0;
             if (attack.form=='manufactured') {
@@ -459,19 +458,7 @@ const app = Vue.createApp({
             if (this.featList.includes(`Weapon Specialization (${attack.atk_name})`)) {
               damageBonus += 2;
             }
-            display += this.addModifierSign(damageBonus);
-            // Critical
-            let threatRange = 21 - attack.crit_range;
-            if (this.featList.includes('Improved Critical')) {
-              threatRange *= 2;
-              // TODO: keen weapon : threatRange += attack.crit_range
-            }
-            if (threatRange>1) {
-              display += "/" + (21-threatRange) + "‒20";
-            }
-            if (attack.crit_double!='✕2') {
-              display += "/" + attack.crit_double;
-            }
+            display += this.addModifierSign(damageBonus) + this.displayCritical(attack.crit_range, attack.crit_double);
             // Special Effect
             if (attack.special_effect) {
               display += " plus " + attack.special_effect;
@@ -480,6 +467,21 @@ const app = Vue.createApp({
           }
           else if (attack.special_effect) {
            display += " (" + attack.special_effect + ")";
+          }
+          displayList.push(display);
+        }
+        return displayList;
+      },
+      displaySpecialAbilitiesList(){
+      //TODO: monster type special abilities
+      let displayList = [];
+        for (x in this.specialAbilities) {
+          let display = {};
+          if (this.specialAbilities[x].description) {
+            display.description = this.replaceDescription(this.specialAbilities[x].description, this.specialAbilities[x].special_name);
+          }
+          if (this.specialAbilities[x].statblock) {
+            display.statblock = this.replaceDescription(this.specialAbilities[x].statblock, this.specialAbilities[x].special_name);
           }
           displayList.push(display);
         }
@@ -526,9 +528,17 @@ const app = Vue.createApp({
             special_name: ability.name,
             category: ability.category,
             description: ability.description,
-            shorthand: ability.shorthand,
-            special_type: '',
+            statblock: ability.shorthand,
+            special_type: 'none',
           };
+          if (ability.save) {
+            newAbility.save_type = ability.save_type;
+            newAbility.save_effect = ability.save_effect;
+            newAbility.save_ability = ability.save_ability;
+          }
+          else {
+            newAbility.save_type = 'None';
+          }
           this.monsterTypeSpecialAbilities.push(newAbility);
         }
       },
@@ -558,47 +568,31 @@ const app = Vue.createApp({
           }
       },
       typicalReach() {
-      // TODO: datalist monsterFace
         if (this.monsterSizeModifier>1) {
             this.monsterReach = 0;
-            if (this.monsterSize=='Fine') {
-              this.monsterFace = "0.5 ft. ✕ 0.5 ft.";
-            }
-            else if (this.monsterSize=='Diminutive') {
-              this.monsterFace = "1 ft. ✕ 1 ft.";
-            }
-            else {
-              this.monsterFace = "2.5 ft. ✕ 2.5 ft.";
-            }
+            this.monsterFaceList = ["0.5 ft. ✕ 0.5 ft.", "1 ft. ✕ 1 ft.", "2.5 ft. ✕ 2.5 ft."];
         }
         else if (this.monsterSizeModifier>=0 || (this.monsterSize=='large' && this.bodyShape=='long')) {
             this.monsterReach = 5;
-            if (this.monsterSize=='large') {
-              this.monsterFace = "5 ft. ✕ 10 ft.";
-            }
-            else {
-              this.monsterFace = "5 ft. ✕ 5 ft.";
-            }
+            this.monsterFaceList = ["5 ft. ✕ 5 ft.", "5 ft. ✕ 10 ft."];
         }
         else if ((this.monsterSize=='large' && this.bodyShape=='tall') || (this.monsterSize=='huge' && this.bodyShape=='long')) {
             this.monsterReach = 10;
-            if (this.monsterSize=='large') {
-              this.monsterFace = "5 ft. ✕ 5 ft.";
-            }
-            else {
-              this.monsterFace = "15 ft. ✕ 15 ft."; // or this.monsterFace = "10 ft. ✕ 20 ft.";
-            }
+            this.monsterFaceList = ["5 ft. ✕ 5 ft.", "15 ft. ✕ 15 ft.", "10 ft. ✕ 20 ft."];
         }
         else if ((this.monsterSize=='huge' && this.bodyShape=='tall') || (
                  (this.monsterSize=='gargantuan' || this.monsterSize=='colossal') && this.bodyShape=='long')
                 ) {
             this.monsterReach = 15;
+            this.monsterFaceList = ["10 ft. ✕ 10 ft.", "20 ft. ✕ 20 ft.", "20 ft. ✕ 40 ft.", "30 ft. ✕ 30 ft.", "40 ft. ✕ 80 ft."];
         }
         else if (this.monsterSize=='gargantuan' && this.bodyShape=='tall') {
             this.monsterReach = 20;
+            this.monsterFaceList = ["20 ft. ✕ 20 ft."];
         }
         else {
             this.monsterReach = 25;
+            this.monsterFaceList = ["40 ft. ✕ 40 ft."];
         }
       },
       addSkill() {
@@ -628,6 +622,10 @@ const app = Vue.createApp({
         // The Hide skill includes a size modifier
         if (skill.skill_name=='Hide') {
             skill.size_modifier = sizeModifier(this.monsterSize) * 4;
+        }
+        // A Climb or Swim speed gives the skill a racial bonus
+        if ((skill.skill_name=='Climb' && this.climbSpeed>0) || (skill.skill_name=='Swim' && this.swimSpeed>0)) {
+            skill.racial_bonus += 8;
         }
         // Undead spellcasters use Charisma instead of Constitution for Concentration checks
         if (skill.skill_name=='Concentration' && this.monsterType=='undead') {
@@ -724,10 +722,20 @@ const app = Vue.createApp({
         // Set properties used to create attack according to selected preset
         this.attackName = this.presetWeapon;
         const weaponInfo = weaponInformation(this.presetWeapon);
+                console.log(weaponInfo)
         this.weaponSize = weaponInfo.weaponSize;
         this.attackForm = weaponInfo.attackForm;
         this.weaponDamage = weaponInfo.weaponDamage;
-        this.weaponMaterial = weaponInfo.weaponMaterial;
+        this.critRange = 21 - weaponInfo.critRange;
+        this.critDouble = weaponInfo.critDouble;
+        this.rangeIncrement = weaponInfo.rangeIncrement;
+        // Statement underneath has to include == "True", because weaponInfo.weaponReach is a string
+        if (weaponInfo.weaponReach == "True") {
+          this.weaponReach = this.monsterReach * 2;
+        }
+        else {
+          this.weaponReach = this.monsterReach;
+        }
       },
       addAttack() {
         // Natural: group, sole, form, atk_name, number, reach, range, weapon_damage, crit_range, crit_double, special_effect, magic
@@ -757,13 +765,17 @@ const app = Vue.createApp({
         }
         else {
           // Add manufactured attack variables
-          attack.hand = this.attackHand;
+          this.attackHand = this.attackHand.split(',');
+          attack.hand = this.attackHand[0];
+          attack.dual = this.attackHand[1];
+          attack.weapon_size = this.weaponSize;
           attack.form = this.attackForm;
           // Reset manufactured variables
           this.presetWeapon = null;
-          this.weaponSize = null;
-          this.attackHand = null;
+          this.weaponSize = '';
+          this.attackHand = 'one-handed,false';
         }
+        console.log(attack);
         this.attackList.push(attack);
         // Reset rest of form
         this.attackNature = null;
@@ -798,7 +810,8 @@ const app = Vue.createApp({
         }
         else {
         this.weaponSize = attack.weapon_size;
-        this.weaponHand = attack.hand;       
+        this.attackHand = `${attack.hand},${attack.dual}`;
+        console.log(this.attackHand);
         }      
       },
       deleteAttack(item) {
@@ -814,7 +827,7 @@ const app = Vue.createApp({
         }
         if (multiple) { //'double' || 'off-light', 'equal-size'
           multiWeaponFightingPenalty += 2;
-          if (multiple=='equal-size') { //sizeModifier(size)>=this.monsterSizeModifier
+          if (multiple=='equal-size') {
             multiWeaponFightingPenalty += 2;
           }
           if (!this.featList.includes('Multifighting') || !this.featList.includes('Two-Weapon Fighting')) {
@@ -850,10 +863,11 @@ const app = Vue.createApp({
           }
         }
         else if (this.strengthModifier>0 && hand=='off-hand') {
-          return this.strengthModifier * 0.5;
+          return Math.floor(this.strengthModifier * 0.5);
         }
-        else if (this.strengthModifier>0 && form=='melee' && hand=='two-handed' && sizeModifier(size)>=this.monsterSizeModifier) {
-          return this.strengthModifier * 1.5;
+        else if (this.strengthModifier>0 && form=='melee' && hand=='two-handed' &&
+            sizeModifier(size)>=this.monsterSizeModifier) {
+          return Math.floor(this.strengthModifier * 1.5);
         }
         else {
           return this.strengthModifier;
@@ -873,7 +887,8 @@ const app = Vue.createApp({
 	        penalty = 5;
 	      }
 	    }
-	    if (form=='melee' && !(this.featList.includes(`Weapon Finesse (${name})`) && this.dexterityModifier > this.strengthModifier)) {
+	    if (form=='melee' &&
+            !(this.featList.includes(`Weapon Finesse (${name})`) && this.dexterityModifier > this.strengthModifier)) {
 	      return this.strengthModifier + bonus - penalty;
 	    }
 	    else {
@@ -885,21 +900,34 @@ const app = Vue.createApp({
 	     return 0
 	    }
 	    else {
+	      let damageModifier = 1;
 	      if (this.strengthModifier>0) {
 	        if (sole) {
-	          return this.strengthModifier*1.5
+	          damageModifier = 1.5;
 	        }
 	        else if(group=='secondary') {
-	          return this.strengthModifier*0.5
-	        }
-	        else {
-	          return this.strengthModifier
+	          damageModifier = 0.5;
 	        }
 	      }
-	      else {
-	        return this.strengthModifier
-	      }
+	      return Math.floor(this.strengthModifier*damageModifier)
 	    }
+	  },
+	  displayCritical(range, double) {
+	    // Critical
+	    let display = '';
+        if (this.featList.includes('Improved Critical')) {
+          let threatRange = 21 - range;
+          threatRange *= 2;
+          range = 21 - threatRange;
+          // TODO: keen weapon : threatRange += attack.crit_range
+        }
+        if (range<20) {
+          display += "/" + range + "‒20";
+        }
+        if (double!='✕2') {
+          display += "/" + double;
+        }
+        return display;
 	  },
       armorCalculations() {
         // Armor
@@ -917,9 +945,8 @@ const app = Vue.createApp({
         if (this.wornShield != 'none') {
           // Shield
           const shieldInfo = shieldInformation(this.wornShield);
-          // Is shield penalty added, or use highest?
           this.armorBonus += shieldInfo.armorBonus;
-          this.armorPenalty -= shieldInfo.armorPenalty;
+          this.armorPenalty += shieldInfo.armorPenalty;
         }
       },
       addSpell(list) {
@@ -952,7 +979,7 @@ const app = Vue.createApp({
           }
         }
         if (this.spellAttack.includes('saving throw')) {
-          newSpell.saving_throw = this.saveDC('spell', this.specialSaveAbility);
+          newSpell.saving_throw = this.saveDC(this.specialSaveAbility, 'spell');
         }
         newSpell.detail = this.spellDetail
         if (list=='atWill') {
@@ -972,36 +999,50 @@ const app = Vue.createApp({
         }
         // Reset Form
         this.spellName = '';
-        this.spellAttack = null;
-        this.spellRange = null;
+        this.spellAttack = [];
+        this.spellRange = 'none';
         this.customSpellRange = 0;
-        this.spellSchool = null;
-        this.spellLeveL = null;
+        this.spellSchool = 'none';
+        this.spellLeveL = 1;
         this.spellDetail = null;
+      },
+      deleteSpell(list, spell) {
+       if (list=='atWill') {
+          this.spellsAtWill.splice(spell, 1);
+        }
+        else if (list=='onceDay') {
+          this.spellsOncePerDay.splice(spell, 1);
+        }
+        else if (list=='thriceDay') {
+          this.spellsThricePerDay.splice(spell, 1);
+        }
+        else if (list=='onceWeek') {
+          this.spellsOncePerWeek.splice(spell, 1);
+        }
+        else if (list=='psionics') {
+          this.psionicPowers.splice(spell, 1);
+        }
       },
       presetSpecialAbility() {
         this.specialAbility = this.specialPreset;
         let specialInfo = specialInformation(this.specialPreset, this.monsterName);
         this.specialDescription = specialInfo.description;
-        this.specialShorthand = specialInfo.shorthand;
+        this.specialStatblock = specialInfo.statblock;
         this.specialCategory = specialInfo.category;
-        this.specialSave = specialInfo.save_type;
-        this.specialSaveHalfOrNegate = specialInfo.save_effect;
-        this.specialSaveAbility = specialInfo.save_ability;
       },
-      addSpecialAbility() {     
+      addSpecialAbility() {
         const newAbility = {
           special_name: this.specialAbility,
           category: this.specialCategory,
           special_type: this.specialType,
           description: this.specialDescription,
-          shorthand: this.specialShorthand,
-          save: this.specialSave,
-          half_negate: this.specialSaveHalfOrNegate,
-          save_base: this.specialSaveAbility,
+          statblock: this.specialStatblock,
           };
-          console.log(newAbility);
         this.specialAbilities.push(newAbility);
+        this.specialAbility = '';
+        this.specialCategory = '';
+        this.specialDescription = '';
+        this.specialStatblock = '';
       },
       deleteSpecialAbility(item, list) {
         if (list=='fromType') {
@@ -1022,13 +1063,56 @@ const app = Vue.createApp({
         this.specialAbility = ability.special_name;
         this.specialCategory = ability.category;
         this.specialDescription = ability.description;
-        this.specialSave = ability.save;
-        this.specialSaveHalfOrNegate = ability.half_negate;
-        this.specialSaveAbility = ability.save_base;
+        this.specialStatblock = ability.statblock;
+        this.deleteSpecialAbility(item, list);
+      },
+      replaceDescription(description, name) {
+        console.log(description);
+        description = description.replaceAll("[MON]", this.monsterName.toLowerCase());
+        // TODO: manufactured weapons?
+        // TODO: check if all saves special abilities model are correct
+        description = description.replaceAll("[MELEE ATK]", this.addModifierSign(
+            this.calculateNaturalAttackBonus('primary', 'melee', name.toLowerCase())));
+        description = description.replaceAll("[RANGED ATK]", this.addModifierSign(
+            this.calculateNaturalAttackBonus('primary', 'ranged', name.toLowerCase())));
+        description = description.replaceAll("[THROWN ATK]", this.addModifierSign(
+            this.calculateNaturalAttackBonus('primary', 'thrown', name.toLowerCase())));
+        description = description.replaceAll("[MELEE ATK SEC]", this.addModifierSign(
+            this.calculateNaturalAttackBonus('secondary', 'melee', name.toLowerCase())));
+        description = description.replaceAll("[RANGED ATK SEC]", this.addModifierSign(
+            this.calculateNaturalAttackBonus('secondary', 'ranged', name.toLowerCase())));
+        description = description.replaceAll("[THROWN ATK SEC]", this.addModifierSign(
+            this.calculateNaturalAttackBonus('secondary', 'thrown', name.toLowerCase())));
+        description = description.replaceAll("[MELEE DMG]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('primary', 'melee', false)));
+        description = description.replaceAll("[RANGED DMG]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('primary', 'ranged', false)));
+        description = description.replaceAll("[THROWN DMG]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('primary', 'thrown', false)));
+        description = description.replaceAll("[MELEE DMG STRONG]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('primary', 'melee', true)));
+        description = description.replaceAll("[RANGED DMG STRONG]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('primary', 'ranged', true)));
+        description = description.replaceAll("[THROWN DMG STRONG]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('primary', 'thrown', true)));
+        description = description.replaceAll("[MELEE DMG SEC]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('secondary', 'melee', false)));
+        description = description.replaceAll("[RANGED DMG SEC]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('secondary', 'ranged', false)));
+        description = description.replaceAll("[THROWN DMG SEC]", this.addModifierSign(
+            this.calculateNaturalDamageBonus('secondary', 'thrown', false)));
+        description = description.replaceAll("[SAVE STR]", this.saveDC('STR', name.toLowerCase()));
+        description = description.replaceAll("[SAVE DEX]", this.saveDC('DEX', name.toLowerCase()));
+        description = description.replaceAll("[SAVE CON]", this.saveDC('CON', name.toLowerCase()));
+        description = description.replaceAll("[SAVE INT]", this.saveDC('INT', name.toLowerCase()));
+        description = description.replaceAll("[SAVE WIS]", this.saveDC('WIS', name.toLowerCase()));
+        description = description.replaceAll("[SAVE CHA]", this.saveDC('CHA', name.toLowerCase()));
+        description = description.replaceAll("[AC INSIDES]", 10 + Math.floor(0.5 * this.naturalArmor));
+        return description;
       },
       saveDC(modifier, ability) {
         // Vermin gain a Venom DC bonus depending on size
-        if (ability=='Venom' && this.monsterType=='vermin' && this.monsterSizeModifier<1) {
+        if (['venom', 'poison'].includes(ability) && this.monsterType=='vermin' && this.monsterSizeModifier<1) {
             if (this.monsterSize=='medium') {
                 return 10 + Math.floor(0.5 * this.hdCalc) + this.getModifier(modifier) +2;
             }

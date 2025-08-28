@@ -102,9 +102,8 @@ class Monster(models.Model):
     monstertype = models.ForeignKey('monsterbuilder.MonsterType', on_delete=models.PROTECT, related_name="+", blank=False, null=False)
     subtypes = models.ManyToManyField('monsterbuilder.MonsterSubType', blank=True)
     size = models.IntegerField(choices=SIZE_MODIFIERS, default=0)
-    reach = models.IntegerField(choices=SIZE_MODIFIERS, default=0)
+    reach = models.IntegerField(default=5)
 # space
-
     # Ability Scores
     # The modifier does not have to be stored in the model. It's easily calculated from the score.
     strength = models.IntegerField(default=10)
@@ -210,6 +209,7 @@ class SkillRanks(models.Model):
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
     ranks = models.IntegerField(default=0)
     racial_bonus = models.IntegerField(default=0)
+    variant = models.CharField(max_length=15, null=True, blank=True)
     # Maybe a link with feats for bonuses on skills given by that feat?
 
 # Feats
@@ -238,18 +238,14 @@ class FeatDetails(models.Model):
 class SpecialAbility(models.Model):
     name = models.CharField(max_length=30, unique=True)
     description = models.TextField(null=True, blank=True)
-    shorthand = models.CharField(null=True, blank=True, max_length=30)
-    save_type = models.CharField(max_length=4, null=True, blank=True, choices=SAVING_THROWS)
-    save_effect = models.CharField(max_length=7, null=True, blank=True, choices=SAVE_EFFECT)
-    save_ability = models.CharField(max_length=3, choices=ABILITY_SCORES, null=True, blank=True)
+    shorthand = models.CharField(null=True, blank=True, max_length=50)
     category = models.CharField(max_length=15, choices=CATEGORY)
 
     class Meta:
       verbose_name_plural = "special abilities"
 
     def __str__(self):
-         return (f"{self.name} ({self.description}, {self.shorthand}, {self.category}"
-                 f"{self.save_type}, {self.save_effect}, {self.save_ability})")
+         return (f"{self.name} ({self.description}, {self.shorthand}, {self.category}")
 
 #class SpecialAbilityDescription(models.Model):
     #monstertype = models.ForeignKey(MonsterType, on_delete=models.CASCADE)
@@ -261,7 +257,6 @@ class Weapon(models.Model):
     damage = models.CharField(max_length=10)
     atk_form = models.CharField(max_length=6, choices=ATTACK_FORM)
     proficiency = models.CharField(max_length=7, choices=PROFICIENCY)
-    # TODO: Add crit doubles
     # TODO: Reach
     # Number of numbers on which a weapon threatens a crit
     crit_range = models.IntegerField(default=1, verbose_name="critical threat range")
@@ -276,7 +271,7 @@ class Armor(models.Model):
     name = models.CharField(max_length=30, unique=True)
     weight= models.CharField(max_length=6)
     armor_bonus = models.IntegerField()
-    max_dex = models.IntegerField(null=True, verbose_name="maximum dexterity bonus")
+    max_dex = models.IntegerField(null=True, blank=True, verbose_name="maximum dexterity bonus")
     armor_penalty = models.IntegerField()
     arcane_failure = models.IntegerField()
 
